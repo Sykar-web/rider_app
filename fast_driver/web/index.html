@@ -1,0 +1,194 @@
+<!DOCTYPE html><html><head>
+  <!--
+    If you are serving your web app in a path other than the root, change the
+    href value below to reflect the base path you are serving from.
+
+    The path provided below has to start and end with a slash "/" in order for
+    it to work correctly.
+
+    For more details:
+    * https://developer.mozilla.org/en-US/docs/Web/HTML/Element/base
+
+    This is a placeholder for base href that will be replaced by the value of
+    the `--base-href` argument provided to `flutter build`.
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="FastDriver — multi-modal transport &amp; delivery.">
+
+  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="FastDriver">
+  <link rel="apple-touch-icon" href="icons/Icon-192.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png">
+
+  <title>FastDriver</title>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Google Maps JavaScript SDK — required for google_maps_flutter on web.
+       Uses a web-restricted key (HTTP referrer restriction in Google Cloud),
+       separate from the Android/iOS key used in AndroidManifest.xml /
+       AppDelegate.swift, since a single key can't carry both restriction types. -->
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZQKnrb-YwK5jIly9LqFbBHm8iyzj91B8" async=""></script>
+
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
+  
+  
+  
+  
+  <style id="splash-screen-style">
+    html {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      min-height: 100%;
+      background-color: #F0F8FF;
+          background-size: 100% 100%;
+    }
+
+    .center {
+      margin: 0;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      -ms-transform: translate(-50%, -50%);
+      transform: translate(-50%, -50%);
+    }
+
+    .contain {
+      display:block;
+      width:100%; height:100%;
+      object-fit: contain;
+    }
+
+    .stretch {
+      display:block;
+      width:100%; height:100%;
+    }
+
+    .cover {
+      display:block;
+      width:100%; height:100%;
+      object-fit: cover;
+    }
+
+    .bottom {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      -ms-transform: translate(-50%, 0);
+      transform: translate(-50%, 0);
+    }
+
+    .bottomLeft {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+    }
+
+    .bottomRight {
+      position: absolute;
+      bottom: 0;
+      right: 0;
+    }
+  </style>
+  <script id="splash-screen-script">
+    function removeSplashFromWeb() {
+      document.getElementById("splash")?.remove();
+      document.getElementById("splash-branding")?.remove();
+      document.body.style.background = "transparent";
+    }
+  </script>
+  <style id="fastdriver-startup-style">
+    #splash { position: fixed; inset: 0; z-index: 2147483646; background: #F0F8FF; }
+    #splash img { width: 160px; max-width: 50vw; height: auto; }
+    #fastdriver-startup-status {
+      position: fixed; top: calc(50% + 110px); left: 50%; transform: translateX(-50%);
+      z-index: 2147483647; width: min(320px, calc(100vw - 48px));
+      color: #14254B; text-align: center; font: 16px/1.5 system-ui, sans-serif;
+    }
+    #fastdriver-startup-status p { margin: 0 0 16px; }
+    #fastdriver-startup-status button {
+      border: 0; border-radius: 12px; padding: 12px 24px; background: #0085FF;
+      color: white; font: 600 16px system-ui, sans-serif; cursor: pointer;
+    }
+    #fastdriver-startup-status button:focus-visible { outline: 3px solid #14254B; outline-offset: 3px; }
+    #fastdriver-startup-status [hidden] { display: none; }
+  </style>
+  <script id="fastdriver-startup-script">
+    (() => {
+      let ready = false;
+      let startupTimer;
+      const fail = (message) => {
+        if (ready) return;
+        const status = document.getElementById('fastdriver-startup-message');
+        const reload = document.getElementById('fastdriver-startup-reload');
+        if (status) status.textContent = message || 'FastDriver could not finish loading. Check your connection and reload.';
+        if (reload) reload.hidden = false;
+      };
+      const finish = () => {
+        if (ready) return;
+        ready = true;
+        clearTimeout(startupTimer);
+        // The generated native splash is separate from the Flutter splash.
+        // Remove it only when Flutter has actually painted a usable frame.
+        removeSplashFromWeb();
+        document.getElementById('fastdriver-startup-status')?.remove();
+      };
+      window.fastDriverStartup = { fail, ready: finish };
+      window.addEventListener('flutter-first-frame', finish, { once: true });
+      window.addEventListener('error', (event) => {
+        const source = event.target?.tagName === 'SCRIPT' ? event.target.src : event.filename;
+        if (!source) return;
+        try {
+          const url = new URL(source, document.baseURI);
+          const appUrl = new URL(document.baseURI);
+          const appScript = /\/(flutter_bootstrap|main\.dart|main\.dart\.bootstrap)\.js$/;
+          // A failed Maps SDK must not conceal the login or offline dashboard.
+          if (url.origin === appUrl.origin && appScript.test(url.pathname)) fail();
+        } catch (_) { /* Ignore unrelated or malformed third-party resource URLs. */ }
+      }, true);
+      window.addEventListener('offline', () => fail('You are offline. Reconnect to the internet, then reload FastDriver.'));
+      window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('fastdriver-startup-reload')?.addEventListener('click', () => window.location.reload());
+        if (navigator.onLine === false) fail('You are offline. Reconnect to the internet, then reload FastDriver.');
+      }, { once: true });
+      startupTimer = setTimeout(() => fail('Loading is taking longer than expected. Check your connection, then reload.'), 20000);
+    })();
+  </script>
+
+</head>
+<body>
+  <picture id="splash">
+      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
+      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
+      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
+  </picture>
+  
+  
+  
+  <!--
+    You can customize the "flutter_bootstrap.js" script.
+    This is useful to provide a custom configuration to the Flutter loader
+    or to give the user feedback during the initialization process.
+
+    For more details:
+    * https://docs.flutter.dev/platform-integration/web/initialization
+  -->
+  <div id="fastdriver-startup-status" role="status" aria-live="polite">
+    <p id="fastdriver-startup-message">Starting FastDriver...</p>
+    <button id="fastdriver-startup-reload" type="button" hidden>Reload</button>
+  </div>
+
+  <script src="flutter_bootstrap.js" async=""></script>
+
+
+
+</body></html>

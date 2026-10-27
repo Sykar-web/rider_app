@@ -1,30 +1,39 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:rider_app/main.dart';
+import 'package:smart_ride/screens/home/vehicle_select_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets(
+    'Vehicle list includes six real-image choices and no proceed button',
+    (tester) async {
+      await tester.pumpWidget(const MaterialApp(home: VehicleSelectScreen()));
+      expect(find.text('Motorcycle'), findsOneWidget);
+      expect(find.text('Tuk Tuk'), findsOneWidget);
+      expect(find.text('Car'), findsOneWidget);
+      expect(find.text('Bicycle'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Van'), 200);
+      expect(find.text('Van'), findsOneWidget);
+      await tester.scrollUntilVisible(find.text('Bus'), 200);
+      expect(find.text('Bus'), findsOneWidget);
+      expect(find.byType(Image), findsWidgets);
+      expect(find.text('Continue to Where To'), findsNothing);
+    },
+  );
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('Selecting a vehicle reports it without navigating', (
+    tester,
+  ) async {
+    String? selected;
+    await tester.pumpWidget(
+      MaterialApp(
+        home: VehicleSelectScreen(onSelected: (value) => selected = value),
+      ),
+    );
+    await tester.tap(find.text('Motorcycle'));
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(selected, 'motorcycle');
+    expect(find.byType(VehicleSelectScreen), findsOneWidget);
+    expect(find.byIcon(Icons.check_circle), findsOneWidget);
   });
 }
+
