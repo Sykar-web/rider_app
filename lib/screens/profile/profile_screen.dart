@@ -5,10 +5,11 @@ import '../account/payment_methods_screen.dart';
 import '../../app/theme.dart';
 import '../../app/profile_photo.dart';
 import '../../app/board_widgets.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/auth_service.dart';
 import 'package:provider/provider.dart';
 import '../../core/mode_manager/mode_manager.dart';
-import '../../../fast_driver/lib/screens/auth/signup_screen.dart';
+import '../../fast_driver/screens/auth/signup_screen.dart';
 import '../account/customer_pages.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -98,73 +99,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                         ),
-                // Driver mode toggle button
-                        Consumer<ModeManager>(
-                          builder: (context, modeManager, _) {
-                            final user = supabase.auth.currentUser!;
-                            final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                            return ElevatedButton(
-                              onPressed: () async {
-                                if (!isApproved) {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                                  );
-                                  return;
-                                }
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (c) => AlertDialog(
-                                    title: const Text('Switch to Driver mode'),
-                                    content: const Text(
-                                      'You have been approved as a driver. Switch UI and launcher icon?',
-                                    ),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                                      TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  await modeManager.switchTo(AppMode.driver);
-                                }
-                              },
-                              child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                            );
-                          },
-                        ),
-                Consumer<ModeManager>(
-                  builder: (context, modeManager, _) {
-                    final user = supabase.auth.currentUser!;
-                    final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                    return ElevatedButton(
-                      onPressed: () async {
-                        if (!isApproved) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                          );
-                          return;
-                        }
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            title: const Text('Switch to Driver mode'),
-                            content: const Text(
-                              'You have been approved as a driver. Switch UI and launcher icon?',
-                            ),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                              TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          await modeManager.switchTo(AppMode.driver);
-                        }
-                      },
-                      child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                    );
-                  },
-                ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -177,73 +111,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           color: AppColors.textMuted,
                           fontSize: 13,
                         ),
-                // Driver mode toggle button
-                        Consumer<ModeManager>(
-                          builder: (context, modeManager, _) {
-                            final user = supabase.auth.currentUser!;
-                            final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                            return ElevatedButton(
-                              onPressed: () async {
-                                if (!isApproved) {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                                  );
-                                  return;
-                                }
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (c) => AlertDialog(
-                                    title: const Text('Switch to Driver mode'),
-                                    content: const Text(
-                                      'You have been approved as a driver. Switch UI and launcher icon?',
-                                    ),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                                      TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  await modeManager.switchTo(AppMode.driver);
-                                }
-                              },
-                              child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                            );
-                          },
-                        ),
-                Consumer<ModeManager>(
-                  builder: (context, modeManager, _) {
-                    final user = supabase.auth.currentUser!;
-                    final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                    return ElevatedButton(
-                      onPressed: () async {
-                        if (!isApproved) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                          );
-                          return;
-                        }
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            title: const Text('Switch to Driver mode'),
-                            content: const Text(
-                              'You have been approved as a driver. Switch UI and launcher icon?',
-                            ),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                              TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          await modeManager.switchTo(AppMode.driver);
-                        }
-                      },
-                      child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                    );
-                  },
-                ),
                       ),
                       const SizedBox(height: 8),
                       OutlinedButton(
@@ -254,151 +121,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           side: const BorderSide(color: AppColors.blueDeep),
                           shape: const StadiumBorder(),
                         ),
-                // Driver mode toggle button
-                        Consumer<ModeManager>(
-                          builder: (context, modeManager, _) {
-                            final user = supabase.auth.currentUser!;
-                            final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                            return ElevatedButton(
-                              onPressed: () async {
-                                if (!isApproved) {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                                  );
-                                  return;
-                                }
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (c) => AlertDialog(
-                                    title: const Text('Switch to Driver mode'),
-                                    content: const Text(
-                                      'You have been approved as a driver. Switch UI and launcher icon?',
-                                    ),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                                      TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  await modeManager.switchTo(AppMode.driver);
-                                }
-                              },
-                              child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                            );
-                          },
-                        ),
-                Consumer<ModeManager>(
-                  builder: (context, modeManager, _) {
-                    final user = supabase.auth.currentUser!;
-                    final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                    return ElevatedButton(
-                      onPressed: () async {
-                        if (!isApproved) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                          );
-                          return;
-                        }
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            title: const Text('Switch to Driver mode'),
-                            content: const Text(
-                              'You have been approved as a driver. Switch UI and launcher icon?',
-                            ),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                              TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          await modeManager.switchTo(AppMode.driver);
-                        }
-                      },
-                      child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                    );
-                  },
-                ),
                         child: const Text(
                           'Edit profile',
                           style: TextStyle(fontSize: 12),
                         ),
-                // Driver mode toggle button
-                        Consumer<ModeManager>(
-                          builder: (context, modeManager, _) {
-                            final user = supabase.auth.currentUser!;
-                            final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                            return ElevatedButton(
-                              onPressed: () async {
-                                if (!isApproved) {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                                  );
-                                  return;
-                                }
-                                final confirm = await showDialog<bool>(
-                                  context: context,
-                                  builder: (c) => AlertDialog(
-                                    title: const Text('Switch to Driver mode'),
-                                    content: const Text(
-                                      'You have been approved as a driver. Switch UI and launcher icon?',
-                                    ),
-                                    actions: [
-                                      TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                                      TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                                    ],
-                                  ),
-                                );
-                                if (confirm == true) {
-                                  await modeManager.switchTo(AppMode.driver);
-                                }
-                              },
-                              child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                            );
-                          },
-                        ),
-                Consumer<ModeManager>(
-                  builder: (context, modeManager, _) {
-                    final user = supabase.auth.currentUser!;
-                    final isApproved = (user.appMetadata as Map<String, dynamic>)['driver_approved'] == true;
-                    return ElevatedButton(
-                      onPressed: () async {
-                        if (!isApproved) {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(builder: (_) => const DriverSignupScreen()),
-                          );
-                          return;
-                        }
-                        final confirm = await showDialog<bool>(
-                          context: context,
-                          builder: (c) => AlertDialog(
-                            title: const Text('Switch to Driver mode'),
-                            content: const Text(
-                              'You have been approved as a driver. Switch UI and launcher icon?',
-                            ),
-                            actions: [
-                              TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                              TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
-                            ],
-                          ),
-                        );
-                        if (confirm == true) {
-                          await modeManager.switchTo(AppMode.driver);
-                        }
-                      },
-                      child: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
-                    );
-                  },
-                ),
                       ),
                     ],
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 16),
+            // Driver mode toggle button
+            Consumer<ModeManager>(
+              builder: (context, modeManager, _) {
+                final currentUser = Supabase.instance.client.auth.currentUser;
+                if (currentUser == null) return const SizedBox.shrink();
+                final meta = currentUser.appMetadata;
+                final isApproved = meta is Map<String, dynamic> && meta['driver_approved'] == true;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: ElevatedButton.icon(
+                    icon: Icon(isApproved ? Icons.swap_horiz : Icons.drive_eta),
+                    onPressed: () async {
+                      if (!isApproved) {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                        );
+                        return;
+                      }
+                      final confirm = await showDialog<bool>(
+                        context: context,
+                        builder: (c) => AlertDialog(
+                          title: const Text('Switch to Driver mode'),
+                          content: const Text(
+                            'You have been approved as a driver. Switch UI and launcher icon?',
+                          ),
+                          actions: [
+                            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
+                            TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
+                          ],
+                        ),
+                      );
+                      if (confirm == true) {
+                        await modeManager.switchTo(AppMode.driver);
+                      }
+                    },
+                    label: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 12),
             BoardAction(
               icon: Icons.person_outline,
               title: 'Personal Information',

@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/mode_manager/mode_manager.dart';
-import 'screens/auth/login_screen.dart';
+import 'main.dart' show AuthGate;
 import 'screens/connection_gate.dart';
-import 'screens/home_router.dart';
 import 'screens/splash_screen.dart';
 import 'fast_driver/main.dart' show FastRideDriverApp; // Import driver app widget
 
@@ -41,7 +40,7 @@ class AppRoot extends StatelessWidget {
                 ),
               );
             },
-            home: const SplashScreen(child: ConnectionGate(child: AuthGate())),
+            home: SplashScreen(child: ConnectionGate(child: AuthGate())),
           );
         },
       ),
