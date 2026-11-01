@@ -6,7 +6,9 @@ plugins {
 
 android {
     namespace = "com.example.smart_ride"
-    compileSdk = flutter.compileSdkVersion
+    // file_picker and the current Flutter lifecycle plugin require API 36.
+    // This does not change the minimum Android version supported by FastRide.
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {

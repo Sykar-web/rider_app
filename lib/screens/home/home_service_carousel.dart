@@ -113,7 +113,8 @@ class _HomeServiceCarouselState extends State<HomeServiceCarousel> {
         children: [
           NotificationListener<ScrollNotification>(
             onNotification: (event) {
-              if (event is ScrollStartNotification && event.dragDetails != null) {
+              if (event is ScrollStartNotification &&
+                  event.dragDetails != null) {
                 _dragging = true;
               }
               if (event is ScrollEndNotification) _dragging = false;
@@ -281,4 +282,3 @@ class _HomeServiceCarouselState extends State<HomeServiceCarousel> {
     ),
   );
 }
-

@@ -5,9 +5,13 @@ import '../account/payment_methods_screen.dart';
 import '../../app/theme.dart';
 import '../../app/profile_photo.dart';
 import '../../app/board_widgets.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../services/auth_service.dart';
+
 import 'package:provider/provider.dart';
+
 import '../../core/mode_manager/mode_manager.dart';
 import '../../fast_driver/screens/auth/signup_screen.dart';
 import '../account/customer_pages.dart';
@@ -45,6 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       ).then((saved) {
         if (saved == true && mounted) _load();
       });
+
   Future<void> _logout() async {
     final result = await showDialog<bool>(
       context: context,
@@ -138,7 +143,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 final currentUser = Supabase.instance.client.auth.currentUser;
                 if (currentUser == null) return const SizedBox.shrink();
                 final meta = currentUser.appMetadata;
-                final isApproved = meta is Map<String, dynamic> && meta['driver_approved'] == true;
+                final isApproved = meta['driver_approved'] == true;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: ElevatedButton.icon(
@@ -146,7 +151,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onPressed: () async {
                       if (!isApproved) {
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const SignUpScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const SignUpScreen(),
+                          ),
                         );
                         return;
                       }
@@ -158,8 +165,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             'You have been approved as a driver. Switch UI and launcher icon?',
                           ),
                           actions: [
-                            TextButton(onPressed: () => Navigator.pop(c, false), child: const Text('Cancel')),
-                            TextButton(onPressed: () => Navigator.pop(c, true), child: const Text('Switch')),
+                            TextButton(
+                              onPressed: () => Navigator.pop(c, false),
+                              child: const Text('Cancel'),
+                            ),
+                            TextButton(
+                              onPressed: () => Navigator.pop(c, true),
+                              child: const Text('Switch'),
+                            ),
                           ],
                         ),
                       );
@@ -167,7 +180,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         await modeManager.switchTo(AppMode.driver);
                       }
                     },
-                    label: Text(isApproved ? 'Switch to Driver' : 'Become a Driver'),
+                    label: Text(
+                      isApproved ? 'Switch to Driver' : 'Become a Driver',
+                    ),
                   ),
                 );
               },

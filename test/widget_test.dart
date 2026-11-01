@@ -36,4 +36,3 @@ void main() {
     expect(find.byIcon(Icons.check_circle), findsOneWidget);
   });
 }
-

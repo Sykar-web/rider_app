@@ -55,12 +55,16 @@ class ModeManager extends ChangeNotifier {
     }
     _currentMode = mode;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_prefKey, mode == AppMode.driver ? 'driver' : 'passenger');
+    await prefs.setString(
+      _prefKey,
+      mode == AppMode.driver ? 'driver' : 'passenger',
+    );
     await _applyLauncherAlias();
     notifyListeners();
   }
 
   Future<void> _applyLauncherAlias() async {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) return;
     try {
       await _platformChannel.invokeMethod('setMode', {
         'driverMode': _currentMode == AppMode.driver,

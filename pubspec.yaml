@@ -50,7 +50,9 @@ dependencies:
   cupertino_icons: ^1.0.8
   provider: ^6.1.2
   shared_preferences: ^2.2.2
-  file_picker: ^8.0.0
+  # v10 is compiled for modern Android toolchains. The former v8 release
+  # conflicts with flutter_plugin_android_lifecycle on Android API 36.
+  file_picker: ^10.3.10
 
 dev_dependencies:
   flutter_test:

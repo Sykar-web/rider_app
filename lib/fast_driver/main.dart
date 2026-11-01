@@ -19,6 +19,12 @@ void main() {
 Future<void>? _initialization;
 
 Future<void> initializeDriverApp() {
+  try {
+    Supabase.instance.client;
+    return Future.value();
+  } catch (_) {
+    // Supabase not yet initialized
+  }
   // Reuse in-flight work when retrying after a timeout. Future.timeout does
   // not cancel Supabase initialization, so starting a second copy is unsafe.
   return _initialization ??= _initializeServices().catchError((

@@ -11,17 +11,64 @@ import 'app_root.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: ".env");
-
-  await Supabase.initialize(
-    url: dotenv.env['SUPABASE_URL']!,
-    publishableKey: dotenv.env['SUPABASE_ANON_KEY']!,
-  );
-
-  runApp(const AppRoot());
+  try {
+    await dotenv.load(fileName: '.env');
+    final url = dotenv.env['SUPABASE_URL'];
+    final key = dotenv.env['SUPABASE_ANON_KEY'];
+    if (url == null ||
+        Uri.tryParse(url)?.scheme != 'https' ||
+        key == null ||
+        key.isEmpty) {
+      throw StateError('FastRide connection settings are missing.');
+    }
+    await Supabase.initialize(url: url, publishableKey: key);
+    runApp(const AppRoot());
+  } catch (_) {
+    runApp(const _StartupProblemApp());
+  }
 }
 
 final supabase = Supabase.instance.client;
+
+class _StartupProblemApp extends StatelessWidget {
+  const _StartupProblemApp();
+
+  @override
+  Widget build(BuildContext context) => MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: AppTheme.theme,
+    home: const Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: EdgeInsets.all(28),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.cloud_off_outlined,
+                  size: 54,
+                  color: AppColors.blueDeep,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'FastRide could not start',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Check that your connection settings are available, then close and reopen the app.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.textMuted),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
 
 class FastRideApp extends StatelessWidget {
   const FastRideApp({super.key});

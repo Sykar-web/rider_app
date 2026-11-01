@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/mode_manager/mode_manager.dart';
 import '../../app/theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/driver_account_service.dart';
@@ -772,6 +774,33 @@ class _DriverProfileState extends State<DriverProfile> {
             MaterialPageRoute(builder: (_) => const DriverSupport()),
           ),
         ),
+        ListTile(
+          leading: const Icon(Icons.swap_horiz, color: AppColors.blueDeep),
+          title: const Text('Switch to Passenger Mode'),
+          trailing: const Icon(Icons.chevron_right),
+          onTap: () async {
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (c) => AlertDialog(
+                title: const Text('Switch to Passenger Mode'),
+                content: const Text('Switch to FastRide passenger view?'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(c, false),
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () => Navigator.pop(c, true),
+                    child: const Text('Switch'),
+                  ),
+                ],
+              ),
+            );
+            if (confirm == true && context.mounted) {
+              await context.read<ModeManager>().switchTo(AppMode.passenger);
+            }
+          },
+        ),
         OutlinedButton(
           onPressed: onLogout,
           child: const Text('Logout', style: TextStyle(color: AppColors.error)),
@@ -963,6 +992,34 @@ class _DriverSettingsState extends State<DriverSettings> {
               'FastDriver',
               'Drive. Earn. Move.\nFastRide driver and courier companion. Version 1.0.0.',
             ),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.swap_horiz, color: AppColors.blueDeep),
+            title: const Text('Switch to Passenger Mode'),
+            trailing: const Icon(Icons.chevron_right, size: 20),
+            onTap: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (c) => AlertDialog(
+                  title: const Text('Switch to Passenger Mode'),
+                  content: const Text('Switch to FastRide passenger view?'),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(c, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(c, true),
+                      child: const Text('Switch'),
+                    ),
+                  ],
+                ),
+              );
+              if (confirm == true && context.mounted) {
+                await context.read<ModeManager>().switchTo(AppMode.passenger);
+              }
+            },
           ),
           const SizedBox(height: 24),
           OutlinedButton(
