@@ -54,19 +54,10 @@ class DeliveryService {
   }
 
   Future<void> cancelDelivery(String deliveryId) async {
-    final user = _client.auth.currentUser;
-    if (user == null) throw Exception('Not signed in.');
-    await _client
-        .from('deliveries')
-        .update({
-          'status': 'cancelled',
-          'cancelled_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', deliveryId)
-        .eq('sender_id', user.id)
-        .eq('status', 'requested')
-        .select('id')
-        .single();
+    await _client.rpc(
+      'cancel_unaccepted_request',
+      params: {'p_kind': 'deliveries', 'p_id': deliveryId},
+    );
   }
 
   // --- Courier (driver) side ---

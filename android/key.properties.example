@@ -1,0 +1,6 @@
+# Copy this file to android/key.properties and replace every value before
+# preparing a Play Store upload. Never commit android/key.properties.
+storeFile=../fastRide-upload.jks
+storePassword=replace-with-your-keystore-password
+keyAlias=fastRide
+keyPassword=replace-with-your-key-password

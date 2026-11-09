@@ -25,7 +25,7 @@ class AuthService {
       data: {
         'full_name': fullName,
         'phone': phone,
-        'role': 'driver',
+        'role': 'passenger',
         'driver_onboarding_required': true,
       },
     );
@@ -48,14 +48,14 @@ class AuthService {
   Future<bool> signInWithGoogle() async {
     return await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: kIsWeb ? null : 'io.supabase.fastdriver://login-callback',
+      redirectTo: kIsWeb ? null : 'io.supabase.smartride://login-callback',
     );
   }
 
   Future<bool> signInWithProvider(String provider) async {
     return _client.auth.signInWithOAuth(
       provider == 'Apple' ? OAuthProvider.apple : OAuthProvider.google,
-      redirectTo: kIsWeb ? null : 'io.supabase.fastdriver://login-callback',
+      redirectTo: kIsWeb ? null : 'io.supabase.smartride://login-callback',
     );
   }
 

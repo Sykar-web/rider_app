@@ -77,7 +77,32 @@ class AuthService {
         /* Preserve the profile if storage is temporarily unavailable. */
       }
     }
-    return response;
+    final merged = <String, dynamic>{...?user.userMetadata};
+    for (final entry in (response ?? <String, dynamic>{}).entries) {
+      if (entry.value != null &&
+          (entry.value is! String ||
+              (entry.value as String).trim().isNotEmpty)) {
+        merged[entry.key] = entry.value;
+      }
+    }
+    merged['phone'] ??= user.phone;
+    merged['avatar_url'] ??= user.userMetadata?['picture'];
+    if (merged['avatar_url'] == null) {
+      final application = user.userMetadata?['driver_application'] as Map?;
+      final legacy =
+          user.userMetadata?['driver_profile_photo'] ??
+          (application?['documents'] as Map?)?['Profile Photo'];
+      if (legacy is String && legacy.startsWith('${user.id}/')) {
+        try {
+          merged['avatar_url'] = await _client.storage
+              .from('driver-documents')
+              .createSignedUrl(legacy, 3600);
+        } catch (_) {
+          /* Keep the account usable if storage is offline. */
+        }
+      }
+    }
+    return merged;
   }
 
   /// Update the signed-in user's name and/or phone number.

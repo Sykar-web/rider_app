@@ -133,7 +133,7 @@ class _ScheduleRideScreenState extends State<ScheduleRideScreen> {
           'Plan your next journey',
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: 'Asap',
             fontSize: 23,
             fontWeight: FontWeight.w800,
           ),
@@ -248,7 +248,10 @@ class SharedRideScreen extends StatelessWidget {
                 left: 25,
                 right: 25,
                 bottom: 5,
-                child: Image.asset('assets/vehicles/car.png', height: 115),
+                child: Image.asset(
+                  'assets/vehicles/illustrated_car.png',
+                  height: 115,
+                ),
               ),
             ],
           ),

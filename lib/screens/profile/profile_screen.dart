@@ -13,8 +13,9 @@ import '../../services/auth_service.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/mode_manager/mode_manager.dart';
-import '../../fast_driver/screens/auth/signup_screen.dart';
+import '../../fast_driver/screens/onboarding/driver_application_form.dart';
 import '../account/customer_pages.dart';
+import '../admin/admin_dashboard_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, this.onBack});
@@ -152,7 +153,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       if (!isApproved) {
                         Navigator.of(context).push(
                           MaterialPageRoute(
-                            builder: (_) => const SignUpScreen(),
+                            builder: (_) => const DriverApplicationForm(),
                           ),
                         );
                         return;
@@ -162,7 +163,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         builder: (c) => AlertDialog(
                           title: const Text('Switch to Driver mode'),
                           content: const Text(
-                            'You have been approved as a driver. Switch UI and launcher icon?',
+                            'Open your driver dashboard using this same account?',
                           ),
                           actions: [
                             TextButton(
@@ -188,6 +189,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
             ),
             const SizedBox(height: 12),
+            const AdminDashboardEntry(),
             BoardAction(
               icon: Icons.person_outline,
               title: 'Personal Information',
@@ -224,58 +226,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 MaterialPageRoute<void>(
                   builder: (_) => const NotificationSettingsScreen(),
                 ),
-              ),
-            ),
-            const Divider(height: 1),
-            BoardAction(
-              icon: Icons.lock_outline,
-              title: 'Privacy & Security',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute<void>(
-                  builder: (_) => const SupportRequestScreen(
-                    category: 'privacy',
-                    title: 'Privacy & Security',
-                  ),
-                ),
-              ),
-            ),
-            const Divider(height: 1),
-            BoardAction(
-              icon: Icons.language,
-              title: 'Language',
-              trailing: const Text(
-                'English  ›',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-              ),
-              onTap: () => boardInfo(
-                context,
-                'Language',
-                'FastRide is currently available in English.',
-              ),
-            ),
-            const Divider(height: 1),
-            BoardAction(
-              icon: Icons.info_outline,
-              title: 'About App',
-              trailing: const Text(
-                'Version 1.0.0  ›',
-                style: TextStyle(color: AppColors.textMuted, fontSize: 12),
-              ),
-              onTap: () => showAboutDialog(
-                context: context,
-                applicationName: 'FastRide',
-                applicationVersion: '1.0.0',
-                applicationIcon: Image.asset(
-                  'assets/icon/app_icon_foreground.png',
-                  width: 50,
-                  height: 50,
-                ),
-                children: [
-                  const Text(
-                    'Move Safe, Move Fast. Rides, bus reservations and deliveries in Uganda.',
-                  ),
-                ],
               ),
             ),
             const Divider(height: 1),

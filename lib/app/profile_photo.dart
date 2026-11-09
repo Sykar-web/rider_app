@@ -64,7 +64,7 @@ class _ProfilePhotoState extends State<ProfilePhoto> {
               const Text(
                 'Profile picture',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Asap',
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
                 ),

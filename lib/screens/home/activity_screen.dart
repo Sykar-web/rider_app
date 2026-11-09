@@ -46,6 +46,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
     final client = Supabase.instance.client;
     final userId = client.auth.currentUser?.id;
     if (userId == null) return [];
+    await client.rpc('expire_my_requests');
     final results = await Future.wait([
       client
           .from('rides')
@@ -444,7 +445,7 @@ class _ActivityScreenState extends State<ActivityScreen> {
                                     : 'No ${_filter.toLowerCase()} bookings',
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
-                                  fontFamily: 'Manrope',
+                                  fontFamily: 'Asap',
                                   fontWeight: FontWeight.w800,
                                   fontSize: 20,
                                 ),

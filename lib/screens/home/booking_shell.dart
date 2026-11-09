@@ -27,10 +27,7 @@ class _BookingShellState extends State<BookingShell> {
       children: [
         TickerMode(
           enabled: _index == 0,
-          child: HomeScreen(
-            onProfile: () => _select(4),
-            onSupport: () => _select(3),
-          ),
+          child: HomeScreen(onProfile: () => _select(3)),
         ),
         if (_visited.contains(1))
           ActivityScreen(
@@ -44,10 +41,6 @@ class _BookingShellState extends State<BookingShell> {
         else
           const SizedBox.shrink(),
         if (_visited.contains(3))
-          const SupportScreen()
-        else
-          const SizedBox.shrink(),
-        if (_visited.contains(4))
           const ProfileScreen()
         else
           const SizedBox.shrink(),
@@ -69,17 +62,12 @@ class _BookingShellState extends State<BookingShell> {
           NavigationDestination(
             icon: Icon(Icons.history),
             selectedIcon: Icon(Icons.history_rounded),
-            label: 'My Rides',
+            label: 'Activity',
           ),
           NavigationDestination(
             icon: Icon(Icons.account_balance_wallet_outlined),
             selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Wallet',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.chat_bubble_outline),
-            selectedIcon: Icon(Icons.chat_bubble_rounded),
-            label: 'Support',
+            label: 'Payments',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),

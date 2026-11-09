@@ -100,6 +100,7 @@ class _SplashScreenState extends State<SplashScreen>
                                   // The transparent launcher mark keeps the
                                   // native and Flutter splash visually unified.
                                   'assets/icon/app_icon_foreground.png',
+                                  color: AppColors.blueDeep,
                                   width: 214,
                                   height: 214,
                                   fit: BoxFit.contain,
@@ -127,7 +128,7 @@ class _SplashScreenState extends State<SplashScreen>
                                     child: Text(
                                       'FastRide',
                                       style: const TextStyle(
-                                        fontFamily: 'Manrope',
+                                        fontFamily: 'Asap',
                                         fontSize: 29,
                                         letterSpacing: -0.5,
                                         fontWeight: FontWeight.w800,
@@ -140,7 +141,7 @@ class _SplashScreenState extends State<SplashScreen>
                                     'Move Safe, Move Fast',
                                     textAlign: TextAlign.center,
                                     style: const TextStyle(
-                                      fontFamily: 'Outfit',
+                                      fontFamily: 'Asap',
                                       fontSize: 16,
                                       height: 1.45,
                                       letterSpacing: 0.15,

@@ -16,7 +16,7 @@ class PaymentMethodsScreen extends StatelessWidget {
         const Text(
           'How would you like to pay?',
           style: TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: 'Asap',
             fontSize: 22,
             fontWeight: FontWeight.w800,
           ),

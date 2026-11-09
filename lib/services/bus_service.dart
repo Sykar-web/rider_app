@@ -43,10 +43,11 @@ class BusService {
     final rows = await _client
         .from('bus_schedules')
         .select(
-          'id, departure_time, arrival_time, duration_minutes, service_class, total_seats, bus_companies(name)',
+          'id, departure_time, arrival_time, duration_minutes, service_class, total_seats, bus_companies!inner(name,is_active)',
         )
         .eq('origin', 'Arua')
         .eq('is_active', true)
+        .eq('bus_companies.is_active', true)
         .order('departure_time');
     return (rows as List)
         .cast<Map<String, dynamic>>()

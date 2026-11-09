@@ -1,6 +1,8 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../services/auth_service.dart' as shared;
+
 class DriverAccountService {
   DriverAccountService({SupabaseClient? client})
     : client = client ?? Supabase.instance.client;
@@ -57,12 +59,25 @@ class DriverAccountService {
       ...?row,
       'email': user.email,
     };
+    final sharedPhoto = await shared.AuthService().getCurrentProfile();
+    data['photo_url'] =
+        sharedPhoto?['avatar_url'] ?? user.userMetadata?['picture'];
+    final savedApplication = await client
+        .from('driver_applications')
+        .select('details')
+        .eq('user_id', user.id)
+        .maybeSingle();
+    if (savedApplication != null) {
+      data['driver_application'] = savedApplication['details'];
+    }
     final metadata = user.userMetadata ?? {};
     final application = metadata['driver_application'] as Map? ?? {};
     final path =
         metadata['driver_profile_photo'] ??
         (application['documents'] as Map?)?['Profile Photo'];
-    if (path is String && path.startsWith('${user.id}/')) {
+    if (data['photo_url'] == null &&
+        path is String &&
+        path.startsWith('${user.id}/')) {
       try {
         data['photo_url'] = await client.storage
             .from('driver-documents')
@@ -87,25 +102,7 @@ class DriverAccountService {
     if (photo.bytes == null || photo.size > 5 * 1024 * 1024) {
       throw const FormatException('Choose a JPG or PNG smaller than 5 MB.');
     }
-    final path =
-        '${user.id}/profile-${DateTime.now().microsecondsSinceEpoch}.${photo.extension}';
-    await client.storage
-        .from('driver-documents')
-        .uploadBinary(
-          path,
-          photo.bytes!,
-          fileOptions: FileOptions(
-            contentType: photo.extension == 'png' ? 'image/png' : 'image/jpeg',
-          ),
-        );
-    try {
-      await client.auth.updateUser(
-        UserAttributes(data: {'driver_profile_photo': path}),
-      );
-    } catch (_) {
-      await client.storage.from('driver-documents').remove([path]);
-      rethrow;
-    }
+    await shared.AuthService().uploadAvatar(photo.bytes!);
   }
 }
 

@@ -483,7 +483,7 @@ class _DriverJobScreenState extends State<DriverJobScreen> {
                             child: Text(
                               money(_job['fare_ugx']),
                               style: const TextStyle(
-                                fontFamily: 'Manrope',
+                                fontFamily: 'Asap',
                                 fontWeight: FontWeight.w800,
                                 fontSize: 22,
                                 color: AppColors.blueDeep,
@@ -597,7 +597,7 @@ class DriverTripCompleted extends StatelessWidget {
         'Trip Completed!',
         textAlign: TextAlign.center,
         style: TextStyle(
-          fontFamily: 'Manrope',
+          fontFamily: 'Asap',
           fontSize: 27,
           fontWeight: FontWeight.w800,
         ),

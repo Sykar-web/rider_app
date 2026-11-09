@@ -4,26 +4,27 @@ import 'package:flutter/material.dart';
 /// styling. Keep every screen pulling from here rather than hardcoding
 /// values, so the visual language stays consistent as new screens are added.
 class AppColors {
-  // Matches the app icon's gradient — deep blue to cyan-blue.
-  static const blueDeep = Color(0xFF0066FF);
-  static const blueLight = Color(0xFF149CFF);
+  // Ocean mobility palette with accessible deep-blue accents.
+  static const brand = Color(0xFF007EA7);
+  static const blueDeep = Color(0xFF00617F);
+  static const blueLight = Color(0xFF16B4C7);
   // Kept as the "structural" tone for text/on-light contexts.
-  static const navy = Color(0xFF081333);
+  static const navy = Color(0xFF123542);
   static const teal = blueDeep;
-  static const background = Color(0xFFFFFFFF);
+  static const background = Color(0xFFF2FAFC);
   static const surface = Color(0xFFFFFFFF);
-  static const textPrimary = Color(0xFF081333);
-  static const textMuted = Color(0xFF73809D);
-  static const hairline = Color(0xFFE9EDF5);
+  static const textPrimary = Color(0xFF123542);
+  static const textMuted = Color(0xFF58727D);
+  static const hairline = Color(0xFFD9E8EC);
   static const error = Color(0xFFFF2647);
-  static const blueTint = Color(0xFFEAF4FF);
-  static const field = Color(0xFFF4F6FA);
+  static const blueTint = Color(0xFFE0F3F7);
+  static const field = Color(0xFFF8FCFD);
   static const success = Color(0xFF13AF65);
 
   static const brandGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
-    colors: [blueDeep, blueLight],
+    colors: [brand, blueLight],
   );
 }
 
@@ -31,31 +32,31 @@ class AppTheme {
   static ThemeData get theme {
     final textTheme = TextTheme(
       headlineSmall: TextStyle(
-        fontFamily: 'Manrope',
+        fontFamily: 'Asap',
         fontSize: 26,
         fontWeight: FontWeight.w700,
         letterSpacing: -0.3,
         color: AppColors.textPrimary,
       ),
       titleMedium: TextStyle(
-        fontFamily: 'Manrope',
+        fontFamily: 'Asap',
         fontSize: 16,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
       ),
       bodyMedium: TextStyle(
-        fontFamily: 'Outfit',
+        fontFamily: 'Asap',
         fontSize: 14.5,
         height: 1.5,
         color: AppColors.textPrimary,
       ),
       bodySmall: TextStyle(
-        fontFamily: 'Outfit',
+        fontFamily: 'Asap',
         fontSize: 13,
         color: AppColors.textMuted,
       ),
       labelLarge: TextStyle(
-        fontFamily: 'Outfit',
+        fontFamily: 'Asap',
         fontSize: 14,
         fontWeight: FontWeight.w600,
       ),
@@ -67,26 +68,27 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(
         seedColor: AppColors.blueDeep,
-        primary: AppColors.blueDeep,
+        primary: AppColors.brand,
+        onPrimary: Colors.white,
         secondary: AppColors.blueLight,
         surface: AppColors.surface,
         error: AppColors.error,
       ),
       textTheme: textTheme,
-      fontFamily: 'Outfit',
+      fontFamily: 'Asap',
       dialogTheme: DialogThemeData(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 8,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         titleTextStyle: const TextStyle(
-          fontFamily: 'Manrope',
+          fontFamily: 'Asap',
           fontSize: 20,
           fontWeight: FontWeight.w800,
           color: AppColors.navy,
         ),
         contentTextStyle: const TextStyle(
-          fontFamily: 'Outfit',
+          fontFamily: 'Asap',
           fontSize: 14,
           height: 1.5,
           color: AppColors.textMuted,
@@ -106,7 +108,7 @@ class AppTheme {
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.navy,
         contentTextStyle: const TextStyle(
-          fontFamily: 'Outfit',
+          fontFamily: 'Asap',
           fontSize: 14,
           color: Colors.white,
         ),
@@ -141,7 +143,7 @@ class AppTheme {
         side: const BorderSide(color: AppColors.hairline),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         labelStyle: const TextStyle(
-          fontFamily: 'Outfit',
+          fontFamily: 'Asap',
           color: AppColors.navy,
           fontSize: 13,
         ),
@@ -150,7 +152,7 @@ class AppTheme {
         height: 68,
         elevation: 0,
         backgroundColor: AppColors.surface,
-        indicatorColor: Colors.transparent,
+        indicatorColor: AppColors.blueTint,
         iconTheme: WidgetStateProperty.resolveWith(
           (states) => IconThemeData(
             size: 23,
@@ -177,7 +179,7 @@ class AppTheme {
         surfaceTintColor: Colors.transparent,
         foregroundColor: AppColors.textPrimary,
         titleTextStyle: TextStyle(
-          fontFamily: 'Manrope',
+          fontFamily: 'Asap',
           fontSize: 17,
           fontWeight: FontWeight.w600,
           color: AppColors.textPrimary,
@@ -191,7 +193,7 @@ class AppTheme {
           vertical: 16,
         ),
         labelStyle: TextStyle(
-          fontFamily: 'Outfit',
+          fontFamily: 'Asap',
           fontSize: 14,
           color: AppColors.textMuted,
         ),
@@ -214,14 +216,14 @@ class AppTheme {
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
-          backgroundColor: AppColors.blueDeep,
+          backgroundColor: AppColors.brand,
           foregroundColor: Colors.white,
           minimumSize: const Size.fromHeight(52),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15),
           ),
           textStyle: TextStyle(
-            fontFamily: 'Outfit',
+            fontFamily: 'Asap',
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -231,7 +233,7 @@ class AppTheme {
         style: TextButton.styleFrom(
           foregroundColor: AppColors.blueDeep,
           textStyle: TextStyle(
-            fontFamily: 'Outfit',
+            fontFamily: 'Asap',
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),

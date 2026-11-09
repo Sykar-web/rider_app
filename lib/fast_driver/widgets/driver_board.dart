@@ -34,7 +34,7 @@ class DriverCard extends StatelessWidget {
   Widget build(BuildContext context) => Material(
     color: color,
     shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       side: const BorderSide(color: AppColors.hairline),
     ),
     clipBehavior: Clip.antiAlias,
@@ -160,7 +160,7 @@ class DriverEmpty extends StatelessWidget {
             title,
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Asap',
               fontSize: 20,
               fontWeight: FontWeight.w800,
             ),

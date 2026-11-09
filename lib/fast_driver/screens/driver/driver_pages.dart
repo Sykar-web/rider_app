@@ -3,11 +3,14 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../core/mode_manager/mode_manager.dart';
+import '../../../app/profile_photo.dart';
 import '../../app/theme.dart';
-import '../../services/auth_service.dart';
 import '../../services/driver_account_service.dart';
 import '../../widgets/driver_board.dart';
-import '../onboarding/verification_screen.dart';
+import 'driver_vehicle_information.dart';
+import '../../../screens/admin/admin_dashboard_screen.dart';
+import '../../../screens/account/customer_pages.dart'
+    show PersonalInformationScreen;
 
 class DriverHistory extends StatefulWidget {
   const DriverHistory({
@@ -45,7 +48,7 @@ class _DriverHistoryState extends State<DriverHistory> {
                       label: Text(
                         label,
                         style: TextStyle(
-                          fontFamily: 'Outfit',
+                          fontFamily: 'Asap',
                           fontSize: 13,
                           color: filter == label
                               ? Colors.white
@@ -169,7 +172,7 @@ class _DriverEarningsState extends State<DriverEarnings> {
                       label: Text(
                         period.$2,
                         style: TextStyle(
-                          fontFamily: "Outfit",
+                          fontFamily: 'Asap',
                           fontSize: 13,
                           color: days == period.$1
                               ? Colors.white
@@ -193,7 +196,7 @@ class _DriverEarningsState extends State<DriverEarnings> {
             money(totals.gross),
             textAlign: TextAlign.center,
             style: const TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Asap',
               fontWeight: FontWeight.w800,
               fontSize: 32,
               color: AppColors.blueDeep,
@@ -280,7 +283,7 @@ class _DriverEarningsState extends State<DriverEarnings> {
           const Text(
             'Recent Trips',
             style: TextStyle(
-              fontFamily: 'Manrope',
+              fontFamily: 'Asap',
               fontSize: 19,
               fontWeight: FontWeight.w800,
             ),
@@ -419,7 +422,7 @@ class DriverWallet extends StatelessWidget {
               Text(
                 'Not enabled',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Asap',
                   fontSize: 30,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
@@ -485,7 +488,6 @@ class DriverProfile extends StatefulWidget {
 
 class _DriverProfileState extends State<DriverProfile> {
   late Map<String, dynamic> profile;
-  bool _showVehicle = false;
   Future<void> Function() get onChanged => widget.onChanged;
   Future<void> Function() get onLogout => widget.onLogout;
   @override
@@ -500,143 +502,19 @@ class _DriverProfileState extends State<DriverProfile> {
     profile = Map<String, dynamic>.from(widget.profile);
   }
 
-  Future<void> _reloadProfile() async {
-    final updated = await DriverAccountService().profile();
-    if (mounted) setState(() => profile = updated);
-  }
-
-  Future<void> edit(BuildContext context) async {
-    final name = TextEditingController(text: profile['full_name'] ?? ''),
-        phone = TextEditingController(text: profile['phone'] ?? '');
-    final form = GlobalKey<FormState>();
-    final save = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Personal Information'),
-        content: Form(
-          key: form,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: name,
-                decoration: const InputDecoration(labelText: 'Full name'),
-                validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Enter your name' : null,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: phone,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: 'Phone number'),
-                validator: (v) => RegExp(r'^\+?[0-9 ]{9,16}$').hasMatch(v ?? '')
-                    ? null
-                    : 'Enter a valid phone number',
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (form.currentState!.validate()) Navigator.pop(context, true);
-            },
-            child: const Text('Save'),
-          ),
-        ],
-      ),
-    );
-    if (save == true) {
-      try {
-        await AuthService().updateProfile(
-          fullName: name.text.trim(),
-          phone: phone.text.trim(),
-        );
-        await _reloadProfile();
-        await onChanged();
-      } catch (_) {
-        if (context.mounted) {
-          driverInfo(
-            context,
-            'Could not save',
-            'Check your connection and try again.',
-          );
-        }
-      }
-    }
-    await Future<void>.delayed(const Duration(milliseconds: 350));
-    name.dispose();
-    phone.dispose();
-  }
-
   @override
   Widget build(BuildContext context) {
-    final application = profile['driver_application'] as Map? ?? {};
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        Center(
-          child: Stack(
-            children: [
-              CircleAvatar(
-                radius: 44,
-                backgroundColor: AppColors.blueTint,
-                backgroundImage: profile['photo_url'] is String
-                    ? NetworkImage(profile['photo_url'])
-                    : null,
-                child: profile['photo_url'] == null
-                    ? const Icon(
-                        Icons.person_outline,
-                        size: 44,
-                        color: AppColors.blueDeep,
-                      )
-                    : null,
-              ),
-              Positioned(
-                bottom: 0,
-                right: 0,
-                child: CircleAvatar(
-                  radius: 15,
-                  backgroundColor: AppColors.blueDeep,
-                  child: IconButton(
-                    padding: EdgeInsets.zero,
-                    tooltip: 'Change profile picture',
-                    onPressed: () async {
-                      try {
-                        await DriverAccountService().changePhoto();
-                        await _reloadProfile();
-                        await onChanged();
-                      } catch (_) {
-                        if (context.mounted) {
-                          driverInfo(
-                            context,
-                            'Photo not saved',
-                            'Choose a JPG or PNG smaller than 5 MB and check your connection.',
-                          );
-                        }
-                      }
-                    },
-                    icon: const Icon(
-                      Icons.photo_camera_outlined,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        const Center(child: ProfilePhoto(radius: 44, editable: true)),
+        const SizedBox(height: 8),
         const SizedBox(height: 12),
         Text(
           profile['full_name'] ?? 'FastDriver',
           textAlign: TextAlign.center,
           style: const TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: 'Asap',
             fontWeight: FontWeight.w800,
             fontSize: 23,
           ),
@@ -646,111 +524,7 @@ class _DriverProfileState extends State<DriverProfile> {
           textAlign: TextAlign.center,
           style: const TextStyle(color: AppColors.textMuted),
         ),
-        Center(
-          child: TextButton(
-            onPressed: () => edit(context),
-            child: const Text('Edit personal information'),
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: ChoiceChip(
-                showCheckmark: false,
-                label: Text(
-                  'Personal Info',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    fontSize: 13,
-                    color: !_showVehicle ? Colors.white : AppColors.textMuted,
-                  ),
-                ),
-                selected: !_showVehicle,
-                onSelected: (_) => setState(() => _showVehicle = false),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: ChoiceChip(
-                showCheckmark: false,
-                label: Text(
-                  'Vehicle Info',
-                  style: TextStyle(
-                    fontFamily: 'Outfit',
-                    fontSize: 13,
-                    color: _showVehicle ? Colors.white : AppColors.textMuted,
-                  ),
-                ),
-                selected: _showVehicle,
-                onSelected: (_) => setState(() => _showVehicle = true),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        if (!_showVehicle)
-          DriverCard(
-            child: Column(
-              children: [
-                ListTile(
-                  title: const Text('Full name'),
-                  subtitle: Text(profile['full_name'] ?? 'Not provided'),
-                ),
-                ListTile(
-                  title: const Text('Phone number'),
-                  subtitle: Text(profile['phone'] ?? 'Not provided'),
-                ),
-                ListTile(
-                  title: const Text('Email'),
-                  subtitle: Text(profile['email'] ?? 'Not provided'),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 16),
-        if (_showVehicle)
-          DriverCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Vehicle Information',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 12),
-                const Icon(
-                  Icons.directions_car_outlined,
-                  size: 45,
-                  color: AppColors.blueDeep,
-                ),
-                Text(
-                  [
-                    profile['vehicle_type'] ?? application['vehicle_type'],
-                    application['make'],
-                    application['model'],
-                    application['year'],
-                  ].where((v) => v != null).join(' · '),
-                ),
-                Text(
-                  profile['vehicle_plate'] ??
-                      application['registration_number'] ??
-                      'Registration not provided',
-                ),
-                Text(application['colour'] ?? ''),
-                TextButton(
-                  onPressed: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const VerificationScreen(),
-                    ),
-                  ),
-                  child: const Text('Submit updated vehicle documents'),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
         ListTile(
           leading: const Icon(
             Icons.settings_outlined,
@@ -758,27 +532,33 @@ class _DriverProfileState extends State<DriverProfile> {
           ),
           title: const Text('Settings'),
           trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (_) => DriverSettings(onLogout: onLogout),
+          onTap: () async {
+            await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => DriverSettings(onLogout: onLogout),
+              ),
+            );
+            if (mounted) await onChanged();
+          },
+        ),
+        const AdminDashboardEntry(),
+        const SizedBox(height: 20),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            minimumSize: const Size.fromHeight(56),
+            backgroundColor: AppColors.blueDeep,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
           ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.help_outline, color: AppColors.blueDeep),
-          title: const Text('Help & Support'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const DriverSupport()),
+          icon: const Icon(Icons.swap_horiz_rounded, size: 26),
+          label: const Text(
+            'Switch to passenger',
+            style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
           ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.swap_horiz, color: AppColors.blueDeep),
-          title: const Text('Switch to Passenger Mode'),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () async {
+          onPressed: () async {
             final confirm = await showDialog<bool>(
               context: context,
               builder: (c) => AlertDialog(
@@ -801,6 +581,7 @@ class _DriverProfileState extends State<DriverProfile> {
             }
           },
         ),
+        const SizedBox(height: 14),
         OutlinedButton(
           onPressed: onLogout,
           child: const Text('Logout', style: TextStyle(color: AppColors.error)),
@@ -879,51 +660,31 @@ class DriverSettings extends StatefulWidget {
 }
 
 class _DriverSettingsState extends State<DriverSettings> {
-  bool busy = false;
   @override
   Widget build(BuildContext context) {
-    final user = Supabase.instance.client.auth.currentUser;
     return Scaffold(
       appBar: AppBar(title: const Text('Settings')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          item(Icons.person_outline, 'Account Settings', () async {
-            try {
-              final profile = await DriverAccountService().profile();
-              if (context.mounted) {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => Scaffold(
-                      appBar: AppBar(title: const Text('My Profile')),
-                      body: DriverProfile(
-                        profile: profile,
-                        onChanged: () async {
-                          if (mounted) setState(() {});
-                        },
-                        onLogout: widget.onLogout,
-                      ),
-                    ),
-                  ),
-                );
-              }
-            } catch (_) {
-              if (context.mounted) {
-                driverInfo(
-                  context,
-                  'Account unavailable',
-                  'Check your connection.',
-                );
-              }
-            }
-          }),
           item(
-            Icons.directions_car_outlined,
-            'Vehicle Details',
+            Icons.person_outline,
+            'Personal Information',
             () => Navigator.push(
               context,
-              MaterialPageRoute(builder: (_) => const VerificationScreen()),
+              MaterialPageRoute(
+                builder: (_) => const PersonalInformationScreen(),
+              ),
+            ),
+          ),
+          item(
+            Icons.directions_car_outlined,
+            'Vehicle Information',
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const DriverVehicleInformation(),
+              ),
             ),
           ),
           item(
@@ -934,92 +695,6 @@ class _DriverSettingsState extends State<DriverSettings> {
               'Cash payments',
               'Cash is active. Mobile Money, cards and wallet payments are not connected yet.',
             ),
-          ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            secondary: const Icon(
-              Icons.notifications_outlined,
-              color: AppColors.blueDeep,
-            ),
-            title: const Text('Activity update preference'),
-            subtitle: const Text(
-              'Saved preference; device push is not enabled yet.',
-            ),
-            value: user?.userMetadata?['driver_activity_updates'] != false,
-            onChanged: busy
-                ? null
-                : (v) async {
-                    setState(() => busy = true);
-                    try {
-                      await Supabase.instance.client.auth.updateUser(
-                        UserAttributes(data: {'driver_activity_updates': v}),
-                      );
-                    } catch (_) {
-                      if (context.mounted) {
-                        driverInfo(
-                          context,
-                          'Preference not saved',
-                          'Check your connection.',
-                        );
-                      }
-                    } finally {
-                      if (mounted) setState(() => busy = false);
-                    }
-                  },
-          ),
-          item(
-            Icons.language,
-            'App Language',
-            () => driverInfo(
-              context,
-              'App Language',
-              'English is the currently supported language.',
-            ),
-          ),
-          item(
-            Icons.help_outline,
-            'Help & Support',
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const DriverSupport()),
-            ),
-          ),
-          item(
-            Icons.info_outline,
-            'About',
-            () => driverInfo(
-              context,
-              'FastDriver',
-              'Drive. Earn. Move.\nFastRide driver and courier companion. Version 1.0.0.',
-            ),
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.swap_horiz, color: AppColors.blueDeep),
-            title: const Text('Switch to Passenger Mode'),
-            trailing: const Icon(Icons.chevron_right, size: 20),
-            onTap: () async {
-              final confirm = await showDialog<bool>(
-                context: context,
-                builder: (c) => AlertDialog(
-                  title: const Text('Switch to Passenger Mode'),
-                  content: const Text('Switch to FastRide passenger view?'),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.pop(c, false),
-                      child: const Text('Cancel'),
-                    ),
-                    TextButton(
-                      onPressed: () => Navigator.pop(c, true),
-                      child: const Text('Switch'),
-                    ),
-                  ],
-                ),
-              );
-              if (confirm == true && context.mounted) {
-                await context.read<ModeManager>().switchTo(AppMode.passenger);
-              }
-            },
           ),
           const SizedBox(height: 24),
           OutlinedButton(

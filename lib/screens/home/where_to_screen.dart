@@ -23,6 +23,8 @@ class WhereToScreen extends StatefulWidget {
   final bool shared;
   final PlaceResult? initialDestination;
   final PlaceResult? initialPickup;
+  final LocationService? locationService;
+  final RouteService? routeService;
 
   final VoidCallback? onChangeVehicle;
   const WhereToScreen({
@@ -34,6 +36,8 @@ class WhereToScreen extends StatefulWidget {
     this.shared = false,
     this.initialDestination,
     this.initialPickup,
+    this.locationService,
+    this.routeService,
   });
 
   @override
@@ -41,10 +45,10 @@ class WhereToScreen extends StatefulWidget {
 }
 
 class _WhereToScreenState extends State<WhereToScreen> {
-  final _locationService = LocationService();
+  late final LocationService _locationService;
   final _rideService = RideService();
   final _deliveryService = DeliveryService();
-  final _routeService = RouteService();
+  late final RouteService _routeService;
 
   // Set once GoogleMap finishes initializing (onMapCreated). Used for
   // camera moves (recenter, fitBounds) in place of flutter_map's MapController.
@@ -63,6 +67,8 @@ class _WhereToScreenState extends State<WhereToScreen> {
   int _routeGeneration = 0;
   int _pinGeneration = 0;
   bool _ridePickupReady = false;
+  int _gpsGeneration = 0;
+  bool _gpsAvailable = false;
 
   // Ride mode fields
   final _fromController = TextEditingController(); // GPS-filled, editable
@@ -92,14 +98,19 @@ class _WhereToScreenState extends State<WhereToScreen> {
   @override
   void initState() {
     super.initState();
+    _locationService = widget.locationService ?? LocationService();
+    _routeService = widget.routeService ?? RouteService();
     _vehicleType = widget.vehicleType;
     _mode = widget.initialMode;
-    _initLocation().then((_) async {
-      if (mounted && widget.initialDestination != null) {
-        _activeField = 'to';
-        await _selectSuggestion(widget.initialDestination!);
-      }
-    });
+    final destination = widget.initialDestination;
+    if (destination?.lat != null && destination?.lon != null) {
+      _toController.text = destination!.displayName;
+      _destinationPosition = LatLng(destination.lat!, destination.lon!);
+    } else if (destination != null) {
+      _activeField = 'to';
+      _selectSuggestion(destination);
+    }
+    _initLocation();
   }
 
   @override
@@ -112,7 +123,11 @@ class _WhereToScreenState extends State<WhereToScreen> {
       final end = _mode == TripMode.ride
           ? _destinationPosition
           : _deliveryPosition;
-      if (start != null && end != null) _loadRoute(start, end);
+      if (start != null &&
+          end != null &&
+          (_mode != TripMode.ride || _ridePickupReady)) {
+        _loadRoute(start, end);
+      }
     }
   }
 
@@ -132,6 +147,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
   }
 
   Future<void> _initLocation() async {
+    final generation = ++_gpsGeneration;
     final pickup = widget.initialPickup;
     if (pickup?.lat != null && pickup?.lon != null) {
       setState(() {
@@ -140,31 +156,48 @@ class _WhereToScreenState extends State<WhereToScreen> {
         _ridePickupReady = true;
         _loadingLocation = false;
         _locationError = null;
+        if (_mode == TripMode.delivery) {
+          _pickupController.text = pickup.displayName;
+          _pickupPosition = _currentPosition;
+        }
       });
+      if (_destinationPosition != null) {
+        _loadRoute(_currentPosition!, _destinationPosition!);
+      }
       return;
     }
     try {
       final position = await _locationService.getCurrentPosition();
+      if (!mounted || generation != _gpsGeneration) return;
       final latLng = LatLng(position.latitude, position.longitude);
-      final address = await _locationService.reverseGeocode(
-        position.latitude,
-        position.longitude,
-      );
+      var address = 'Current location';
+      try {
+        address = await _locationService.reverseGeocode(
+          position.latitude,
+          position.longitude,
+        );
+      } catch (_) {
+        /* GPS coordinates remain usable if address lookup fails. */
+      }
 
-      if (!mounted) return;
+      if (!mounted || generation != _gpsGeneration) return;
       setState(() {
         _currentPosition = latLng;
         _ridePickupReady = true;
         _fromController.text = address;
         _loadingLocation = false;
+        _gpsAvailable = true;
       });
+      if (_destinationPosition != null && _mode == TripMode.ride) {
+        _loadRoute(latLng, _destinationPosition!);
+      }
       _mapController?.animateCamera(CameraUpdate.newLatLngZoom(latLng, 15));
       // GoogleMap is only built once _currentPosition is set, and it uses
       // initialCameraPosition: CameraPosition(target: _currentPosition!, ...),
       // so it already starts centered correctly — no need to move the
       // camera here.
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted || generation != _gpsGeneration) return;
       setState(() {
         _locationError =
             'Location access is unavailable. Choose your pickup manually.';
@@ -183,10 +216,14 @@ class _WhereToScreenState extends State<WhereToScreen> {
     setState(() {
       switch (field) {
         case 'from':
+          _gpsGeneration++;
+          _loadingLocation = false;
           _ridePickupReady = false;
         case 'to':
           _destinationPosition = null;
         case 'pickup':
+          _gpsGeneration++;
+          _loadingLocation = false;
           _pickupPosition = null;
         case 'delivery':
           _deliveryPosition = null;
@@ -253,6 +290,9 @@ class _WhereToScreenState extends State<WhereToScreen> {
     setState(() {
       switch (_activeField) {
         case 'from':
+          _gpsGeneration++;
+          _loadingLocation = false;
+          _locationError = null;
           _fromController.text = selectedPlace.displayName;
           _ridePickupReady = true;
           _currentPosition = selectedPosition;
@@ -263,11 +303,14 @@ class _WhereToScreenState extends State<WhereToScreen> {
         case 'to':
           _toController.text = selectedPlace.displayName;
           _destinationPosition = selectedPosition;
-          if (_currentPosition != null) {
+          if (_currentPosition != null && _ridePickupReady) {
             _fitBounds(_currentPosition!, _destinationPosition!);
             _loadRoute(_currentPosition!, _destinationPosition!);
           }
         case 'pickup':
+          _gpsGeneration++;
+          _loadingLocation = false;
+          _locationError = null;
           _pickupController.text = selectedPlace.displayName;
           _pickupPosition = selectedPosition;
           if (_deliveryPosition != null) {
@@ -371,7 +414,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
     });
 
     final start = mode == TripMode.ride ? _currentPosition : _pickupPosition;
-    if (start != null) {
+    if (start != null && (mode != TripMode.ride || _ridePickupReady)) {
       _loadRoute(start, position);
     }
 
@@ -726,8 +769,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
                           );
                         }
                       },
-                      myLocationEnabled:
-                          _locationError == null && !_loadingLocation,
+                      myLocationEnabled: _gpsAvailable && !_loadingLocation,
                       myLocationButtonEnabled: false,
                       zoomControlsEnabled: false,
                       onTap: _setDestinationFromMap,
@@ -846,7 +888,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
                                     child: Row(
                                       children: [
                                         Image.asset(
-                                          'assets/vehicles/${v.$1}.png',
+                                          'assets/vehicles/illustrated_${v.$1}.png',
                                           width: 65,
                                           height: 38,
                                           fit: BoxFit.contain,
@@ -992,12 +1034,16 @@ class _WhereToScreenState extends State<WhereToScreen> {
                                   fontWeight: FontWeight.w600,
                                 ),
                               ),
-                              Spacer(),
-                              Text(
-                                'Fare confirmed by driver',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.textMuted,
+                              SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  'Fare confirmed by driver',
+                                  textAlign: TextAlign.right,
+                                  maxLines: 2,
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: AppColors.textMuted,
+                                  ),
                                 ),
                               ),
                               SizedBox(width: 4),
@@ -1100,7 +1146,7 @@ class _WhereToScreenState extends State<WhereToScreen> {
         icon: Icons.radio_button_checked,
         iconColor: AppColors.blueLight,
         controller: _fromController,
-        hint: 'Current location',
+        hint: 'Enter pickup location or use GPS',
         // Editable — GPS fills it initially, but the user can type over it.
         onChanged: (v) => _onFieldChanged('from', v),
         onSubmitted: (v) => _onFieldChanged('from', v, expanded: true),

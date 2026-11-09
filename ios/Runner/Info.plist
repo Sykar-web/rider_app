@@ -70,6 +70,23 @@
 		<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a profile picture for your FastRide account.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>FastRide uses your location to set your pickup point, show nearby drivers, and provide turn-by-turn trip updates.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>FastRide uses your location during an active trip so you can follow the ride safely.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.supabase.smartride</string>
+			</array>
+		</dict>
+	</array>
+	<key>GMSApiKey</key>
+	<string>$(GMS_API_KEY)</string>
 </dict>
 </plist>
 

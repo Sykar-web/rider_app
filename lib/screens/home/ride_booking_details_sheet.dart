@@ -402,7 +402,7 @@ class _ScheduleTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFFE2F4FF) : AppColors.background,
+          color: selected ? const Color(0xFFE0F3F7) : AppColors.background,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? AppColors.blueDeep : AppColors.hairline,
@@ -480,7 +480,7 @@ class _SeatGrid extends StatelessWidget {
           child: Container(
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: on ? AppColors.blueDeep : const Color(0xFFEAF6FD),
+              color: on ? AppColors.blueDeep : const Color(0xFFE0F3F7),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
                 color: on ? AppColors.blueDeep : AppColors.hairline,
@@ -507,7 +507,7 @@ class _Message extends StatelessWidget {
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.all(12),
     decoration: BoxDecoration(
-      color: const Color(0xFFEAF6FD),
+      color: const Color(0xFFE0F3F7),
       borderRadius: BorderRadius.circular(12),
     ),
     child: Text(text),

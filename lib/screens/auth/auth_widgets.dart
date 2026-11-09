@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../../app/theme.dart';
 
 const authTitleStyle = TextStyle(
-  fontFamily: 'Manrope',
+  fontFamily: 'Asap',
   fontWeight: FontWeight.w800,
   fontSize: 26,
   letterSpacing: -.8,
@@ -20,13 +20,20 @@ class AuthHero extends StatelessWidget {
     child: Stack(
       fit: StackFit.expand,
       children: [
-        Image.asset('assets/branding/home_hero.png', fit: BoxFit.cover),
+        Image.asset(
+          'assets/branding/illustrated_hero.png',
+          fit: BoxFit.cover,
+          cacheWidth: (480 * MediaQuery.devicePixelRatioOf(context))
+              .round()
+              .clamp(720, 2048),
+          filterQuality: FilterQuality.high,
+        ),
         const DecoratedBox(
           decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xCC007BFF), Color(0x660066FF), Color(0x000066FF)],
+              colors: [Color(0xFFFFFFFF), Color(0xB3FFFFFF), Color(0x00FFFFFF)],
             ),
           ),
         ),
@@ -38,6 +45,7 @@ class AuthHero extends StatelessWidget {
             children: [
               Image.asset(
                 'assets/icon/app_icon_foreground.png',
+                color: AppColors.blueDeep,
                 width: 70,
                 height: 70,
               ),
@@ -45,19 +53,19 @@ class AuthHero extends StatelessWidget {
               const Text(
                 'FastRide',
                 style: TextStyle(
-                  fontFamily: 'Manrope',
+                  fontFamily: 'Asap',
                   fontSize: 30,
                   fontWeight: FontWeight.w800,
-                  color: Colors.white,
+                  color: AppColors.navy,
                 ),
               ),
               const SizedBox(height: 4),
               const Text(
                 'Move Safe, Move Fast',
                 style: TextStyle(
-                  fontFamily: 'Outfit',
+                  fontFamily: 'Asap',
                   fontSize: 16,
-                  color: Colors.white,
+                  color: AppColors.navy,
                 ),
               ),
             ],
@@ -157,7 +165,7 @@ class AuthSubmit extends StatelessWidget {
                 child: Text(
                   label,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontFamily: 'Outfit', fontSize: 17),
+                  style: const TextStyle(fontFamily: 'Asap', fontSize: 17),
                 ),
               ),
               const SizedBox(width: 14),
@@ -224,7 +232,7 @@ class AuthGoogleButton extends StatelessWidget {
                 'Continue with Google',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontFamily: 'Outfit',
+                  fontFamily: 'Asap',
                   fontSize: 15,
                   color: AppColors.navy,
                 ),

@@ -6,7 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/theme.dart';
 import 'screens/onboarding/welcome_screen.dart';
-import 'screens/onboarding/verification_screen.dart';
+import 'screens/onboarding/driver_application_form.dart';
 import 'screens/driver/driver_home_screen.dart';
 import 'screens/splash_screen.dart';
 import 'screens/auth/reset_password_screen.dart';
@@ -169,7 +169,7 @@ class DriverAuthGate extends StatelessWidget {
         // Only an administrator/server may grant driver approval.
         // Passenger logins and editable user metadata must never grant dispatch access.
         if (user.appMetadata['driver_approved'] != true) {
-          return VerificationScreen(key: ValueKey(user.id));
+          return DriverApplicationForm(key: ValueKey(user.id));
         }
         return const DriverHomeScreen();
       },

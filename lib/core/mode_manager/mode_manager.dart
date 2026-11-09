@@ -11,6 +11,7 @@ class ModeManager extends ChangeNotifier {
 
   AppMode _currentMode = AppMode.passenger;
   AppMode get currentMode => _currentMode;
+  Future<bool> Function()? beforeLeavingDriver;
 
   ModeManager() {
     _init();
@@ -46,6 +47,11 @@ class ModeManager extends ChangeNotifier {
 
   Future<void> switchTo(AppMode mode) async {
     if (mode == _currentMode) return;
+    if (_currentMode == AppMode.driver &&
+        mode == AppMode.passenger &&
+        beforeLeavingDriver != null) {
+      if (!await beforeLeavingDriver!()) return;
+    }
     // If switching to driver, ensure approval first
     if (mode == AppMode.driver) {
       final approved = await _isDriverApproved();

@@ -76,17 +76,10 @@ class RideService {
   }
 
   Future<void> cancelRide(String rideId) async {
-    await _client
-        .from('rides')
-        .update({
-          'status': 'cancelled',
-          'cancelled_at': DateTime.now().toIso8601String(),
-        })
-        .eq('id', rideId)
-        .eq('passenger_id', _client.auth.currentUser!.id)
-        .eq('status', 'requested')
-        .select('id')
-        .single();
+    await _client.rpc(
+      'cancel_unaccepted_request',
+      params: {'p_kind': 'rides', 'p_id': rideId},
+    );
   }
 
   // --- Driver side ---

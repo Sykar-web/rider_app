@@ -28,37 +28,37 @@ class _VehicleSelectScreenState extends State<VehicleSelectScreen> {
       'motorcycle',
       'Motorcycle',
       'Quick solo trips',
-      'assets/vehicles/motorcycle.png',
+      'assets/vehicles/illustrated_motorcycle.png',
     ),
     _VehicleOption(
       'tuktuk',
       'Tuk Tuk',
       'Compact city rides',
-      'assets/vehicles/tuktuk.png',
+      'assets/vehicles/illustrated_tuktuk.png',
     ),
     _VehicleOption(
       'car',
       'Car',
       'Comfort for up to 4',
-      'assets/vehicles/car.png',
+      'assets/vehicles/illustrated_car.png',
     ),
     _VehicleOption(
       'bicycle',
       'Bicycle',
       'Light local delivery',
-      'assets/vehicles/bicycle.png',
+      'assets/vehicles/illustrated_bicycle.png',
     ),
     _VehicleOption(
       'van',
       'Van',
       'Large parcel delivery',
-      'assets/vehicles/van.png',
+      'assets/vehicles/illustrated_van.png',
     ),
     _VehicleOption(
       'bus',
       'Bus',
       'Groups and shared trips',
-      'assets/vehicles/bus.png',
+      'assets/vehicles/illustrated_bus.png',
     ),
   ];
 
@@ -126,7 +126,7 @@ class _VehicleSelectScreenState extends State<VehicleSelectScreen> {
         const Text(
           'A ride for every journey',
           style: TextStyle(
-            fontFamily: 'Manrope',
+            fontFamily: 'Asap',
             fontSize: 24,
             fontWeight: FontWeight.w800,
           ),

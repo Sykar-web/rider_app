@@ -3,9 +3,9 @@
     "short_name": "FastRide",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#FFFFFF",
-    "theme_color": "#0066FF",
-    "description": "FastRide - move people, move products, move smarter.",
+    "background_color": "#F2FAFC",
+    "theme_color": "#007EA7",
+    "description": "FastRide - Move Safe, Move Fast.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

@@ -4,7 +4,7 @@ import 'package:smart_ride/screens/home/vehicle_select_screen.dart';
 
 void main() {
   testWidgets(
-    'Vehicle list includes six real-image choices and no proceed button',
+    'Vehicle list includes six illustrated choices and no proceed button',
     (tester) async {
       await tester.pumpWidget(const MaterialApp(home: VehicleSelectScreen()));
       expect(find.text('Motorcycle'), findsOneWidget);

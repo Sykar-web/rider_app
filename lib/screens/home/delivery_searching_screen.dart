@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../app/theme.dart';
 import '../../app/board_widgets.dart';
 import '../../services/delivery_service.dart';
+import '../../services/request_expiry.dart';
 import '../../services/route_service.dart';
 
 class DeliverySearchingScreen extends StatefulWidget {
@@ -25,6 +26,8 @@ class DeliverySearchingScreen extends StatefulWidget {
 }
 
 class _DeliverySearchingScreenState extends State<DeliverySearchingScreen> {
+  late final RequestExpiry _expiry;
+  bool _removed = false;
   final _service = DeliveryService();
   late Stream<Map<String, dynamic>?> _deliveryStream;
   Stream<Map<String, dynamic>?>? _courierStream;
@@ -40,10 +43,18 @@ class _DeliverySearchingScreenState extends State<DeliverySearchingScreen> {
     super.initState();
     _deliveryStream =
         widget.deliveryStream ?? _service.watchDelivery(widget.deliveryId);
+    _expiry = RequestExpiry(
+      kind: 'deliveries',
+      id: widget.deliveryId,
+      onRemoved: () {
+        if (mounted) setState(() => _removed = true);
+      },
+    );
   }
 
   @override
   void dispose() {
+    _expiry.dispose();
     _map?.dispose();
     super.dispose();
   }
@@ -118,9 +129,19 @@ class _DeliverySearchingScreenState extends State<DeliverySearchingScreen> {
     body: StreamBuilder<Map<String, dynamic>?>(
       stream: _deliveryStream,
       builder: (context, snapshot) {
-        if (snapshot.hasError ||
-            (snapshot.connectionState != ConnectionState.waiting &&
+        if (_removed ||
+            (!snapshot.hasError &&
+                snapshot.connectionState != ConnectionState.waiting &&
                 snapshot.data == null)) {
+          return Center(
+            child: StatusMessage(
+              icon: Icons.timer_off_outlined,
+              message: 'This request has closed. Unaccepted requests are removed when cancelled or after three minutes.',
+              onRetry: () => Navigator.maybePop(context),
+            ),
+          );
+        }
+        if (snapshot.hasError) {
           return Center(
             child: StatusMessage(
               message: 'Could not load your delivery. Check your connection and try again.',
@@ -136,6 +157,7 @@ class _DeliverySearchingScreenState extends State<DeliverySearchingScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         final delivery = snapshot.data!;
+        _expiry.follow(delivery);
         final courierId = delivery['courier_id'] as String?;
         if (_courierId != courierId) {
           _courierId = courierId;
@@ -300,7 +322,7 @@ class _DeliverySearchingScreenState extends State<DeliverySearchingScreen> {
                       child: Text(
                         title,
                         style: const TextStyle(
-                          fontFamily: 'Manrope',
+                          fontFamily: 'Asap',
                           fontSize: 20,
                           fontWeight: FontWeight.w800,
                         ),

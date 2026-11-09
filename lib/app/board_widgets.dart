@@ -16,7 +16,7 @@ class BoardCard extends StatelessWidget {
     decoration: BoxDecoration(
       color: Colors.white,
       border: Border.all(color: AppColors.hairline),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(16),
     ),
     child: Material(type: MaterialType.transparency, child: child),
   );

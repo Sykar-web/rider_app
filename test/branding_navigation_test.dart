@@ -1,5 +1,5 @@
 import 'package:smart_ride/screens/home/activity_screen.dart';
-import 'package:smart_ride/screens/home/home_service_carousel.dart';
+import 'package:smart_ride/screens/home/home_ride_hero.dart';
 
 import 'dart:async';
 
@@ -11,6 +11,8 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:smart_ride/core/mode_manager/mode_manager.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -59,12 +61,11 @@ Future<void> savePreview(
 ) async {
   await tester.runAsync(() async {
     for (final asset in [
-      'assets/branding/home_hero.png',
-      for (final name in ['car', 'local', 'van', 'bus', 'delivery'])
-        'assets/branding/service_$name.png',
+      for (final name in ['hero', 'local', 'van', 'bus'])
+        'assets/branding/illustrated_$name.png',
       'assets/icon/app_icon_foreground.png',
       for (final v in ['car', 'motorcycle', 'van', 'bus', 'bicycle', 'tuktuk'])
-        'assets/vehicles/$v.png',
+        'assets/vehicles/illustrated_$v.png',
     ]) {
       await precacheImage(AssetImage(asset), key.currentContext!);
     }
@@ -97,6 +98,9 @@ void main() {
     await (FontLoader(
       'MaterialIcons',
     )..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'))).load();
+    await (FontLoader(
+      'Asap',
+    )..addFont(rootBundle.load('assets/fonts/Asap-Variable.ttf'))).load();
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(
           const MethodChannel('plugins.flutter.io/path_provider'),
@@ -128,7 +132,7 @@ void main() {
   tearDownAll(() async => Supabase.instance.dispose());
 
   testWidgets(
-    'Board navigation opens booking, profile, support and ride history',
+    'Board navigation opens booking, simplified profile and ride history',
     (tester) async {
       tester.view.physicalSize = const Size(390, 844);
       tester.view.devicePixelRatio = 1;
@@ -138,17 +142,33 @@ void main() {
       await tester.pumpWidget(
         RepaintBoundary(
           key: key,
-          child: MaterialApp(
-            debugShowCheckedModeBanner: false,
-            theme: testTheme,
-            home: const BookingShell(),
+          child: ChangeNotifierProvider(
+            create: (_) => ModeManager(),
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              theme: testTheme,
+              home: const BookingShell(),
+            ),
           ),
         ),
       );
       await tester.pumpAndSettle();
       expect(find.text('Home'), findsOneWidget);
-      expect(find.text('My Rides'), findsOneWidget);
-      expect(find.byType(NavigationDestination), findsNWidgets(5));
+      expect(find.text('Activity'), findsOneWidget);
+      expect(find.byType(NavigationDestination), findsNWidgets(4));
+      expect(find.byTooltip('Notifications'), findsNothing);
+      expect(
+        tester.getTopLeft(find.byTooltip('Open profile')).dy,
+        lessThan(tester.getTopLeft(find.byType(HomeRideHero)).dy),
+      );
+      for (final label in [
+        'Popular Destinations',
+        'Bus tickets',
+        'Deliveries',
+        'Reliable Rides\\nAnytime, Anywhere',
+      ]) {
+        expect(find.text(label), findsNothing);
+      }
       await savePreview(tester, key, 'home.png');
       await tester.tap(find.text('Enter destination'));
       await tester.pumpAndSettle();
@@ -167,15 +187,19 @@ void main() {
       await tester.pumpAndSettle();
       await tester.pageBack();
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Profile').last);
+      await tester.tap(find.byTooltip('Open profile'));
       await tester.pumpAndSettle();
       expect(find.text('Personal Information'), findsOneWidget);
       await savePreview(tester, key, 'profile.png');
-      await tester.tap(find.text('Support').last);
-      await tester.pumpAndSettle();
-      expect(find.text('Help Centre'), findsOneWidget);
-      await savePreview(tester, key, 'support.png');
-      await tester.tap(find.text('My Rides').last);
+      for (final label in [
+        'Help & safety',
+        'Privacy & Security',
+        'Language',
+        'About App',
+      ]) {
+        expect(find.text(label), findsNothing);
+      }
+      await tester.tap(find.text('Activity').last);
       await tester.pumpAndSettle();
       expect(find.text('All'), findsOneWidget);
       expect(find.text('Upcoming'), findsOneWidget);
@@ -185,7 +209,7 @@ void main() {
       );
       await tester.tap(find.text('Home').last);
       await tester.pumpAndSettle();
-      expect(find.byType(HomeServiceCarousel), findsOneWidget);
+      expect(find.byType(HomeRideHero), findsOneWidget);
       expect(tester.takeException(), isNull);
     },
   );
@@ -469,32 +493,27 @@ void main() {
   });
 
   testWidgets(
-    'Service slideshow advances and opens the matching booking service',
+    'Home illustration has no promotional text or notification bell',
     (tester) async {
-      String? vehicle;
-      bool? delivery;
       await tester.pumpWidget(
         MaterialApp(
           theme: AppTheme.theme,
-          home: Scaffold(
-            body: HomeServiceCarousel(
-              onProfile: () {},
-              onNotifications: () {},
-              onService: (v, d) {
-                vehicle = v;
-                delivery = d;
-              },
-            ),
-          ),
+          home: const Scaffold(body: HomeRideHero()),
         ),
       );
       await tester.pumpAndSettle();
-      await tester.pump(const Duration(seconds: 6));
-      await tester.pumpAndSettle();
-      expect(find.text('Beat the everyday rush'), findsOneWidget);
-      await tester.tap(find.text('Book a moto →'));
-      expect(vehicle, 'motorcycle');
-      expect(delivery, false);
+      expect(find.byType(PageView), findsNothing);
+      expect(find.text('Your everyday ride'), findsNothing);
+      expect(find.textContaining('Book a'), findsNothing);
+      final provider = tester.widget<Image>(find.byType(Image).first).image;
+      final artwork = provider is ResizeImage
+          ? provider.imageProvider
+          : provider;
+      expect(
+        (artwork as AssetImage).assetName,
+        'assets/branding/illustrated_local.png',
+      );
+      expect(find.byType(IconButton), findsNothing);
       await tester.pumpWidget(const SizedBox());
     },
   );

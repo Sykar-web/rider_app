@@ -82,7 +82,7 @@ class _ConnectionGateState extends State<ConnectionGate> {
                             width: 74,
                             height: 74,
                             decoration: const BoxDecoration(
-                              color: Color(0xFFDCEFFD),
+                              color: Color(0xFFE0F3F7),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(

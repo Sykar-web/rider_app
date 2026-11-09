@@ -150,9 +150,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 const SizedBox(height: 24),
                 Center(
                   child: Image.asset(
-                    'assets/icon/app_icon_foreground.png',
-                    width: 58,
-                    height: 58,
+                    'assets/branding/illustrated_hero.png',
+                    width: double.infinity,
+                    height: 140,
+                    fit: BoxFit.cover,
                   ),
                 ),
                 const SizedBox(height: 24),

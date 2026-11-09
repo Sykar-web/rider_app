@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../app/theme.dart';
 import '../../app/board_widgets.dart';
 import '../../services/ride_service.dart';
+import '../../services/request_expiry.dart';
 import '../../models/booking_summary.dart';
 import '../../services/route_service.dart';
 import '../account/customer_pages.dart';
@@ -44,6 +45,8 @@ class SearchingScreen extends StatefulWidget {
 }
 
 class _SearchingScreenState extends State<SearchingScreen> {
+  late final RequestExpiry _expiry;
+  bool _removed = false;
   final _rideService = RideService();
   GoogleMapController? _mapController;
   LatLng? _lastDriverPosition;
@@ -132,10 +135,18 @@ class _SearchingScreenState extends State<SearchingScreen> {
     super.initState();
     _tripRoute = widget.initialRoute;
     _rideStream = widget.rideStream ?? _rideService.watchRide(widget.rideId);
+    _expiry = RequestExpiry(
+      kind: 'rides',
+      id: widget.rideId,
+      onRemoved: () {
+        if (mounted) setState(() => _removed = true);
+      },
+    );
   }
 
   @override
   void dispose() {
+    _expiry.dispose();
     _mapController?.dispose();
     super.dispose();
   }
@@ -220,9 +231,19 @@ class _SearchingScreenState extends State<SearchingScreen> {
       body: StreamBuilder<Map<String, dynamic>?>(
         stream: _rideStream,
         builder: (context, rideSnapshot) {
-          if (rideSnapshot.hasError ||
-              (rideSnapshot.connectionState != ConnectionState.waiting &&
+          if (_removed ||
+              (!rideSnapshot.hasError &&
+                  rideSnapshot.connectionState != ConnectionState.waiting &&
                   rideSnapshot.data == null)) {
+            return Center(
+              child: StatusMessage(
+                icon: Icons.timer_off_outlined,
+                message: 'This request has closed. Unaccepted requests are removed when cancelled or after three minutes.',
+                onRetry: () => Navigator.maybePop(context),
+              ),
+            );
+          }
+          if (rideSnapshot.hasError) {
             return Center(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -244,6 +265,7 @@ class _SearchingScreenState extends State<SearchingScreen> {
           if (ride == null) {
             return const Center(child: CircularProgressIndicator());
           }
+          _expiry.follow(ride);
           final driverId = ride['driver_id'] as String?;
           if (_driverId != driverId) {
             _driverId = driverId;

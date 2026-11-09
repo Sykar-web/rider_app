@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
+
+import '../../../core/mode_manager/mode_manager.dart';
 
 import '../../app/theme.dart';
 import '../../services/driver_account_service.dart';
@@ -43,6 +46,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
   int _navigationIndex = 0;
   late Future<List<Map<String, dynamic>>> _jobs;
   late final DriverAccountService _account;
+  ModeManager? _modeManager;
   late Stream<List<Map<String, dynamic>>> _openRidesStream,
       _openDeliveriesStream;
   Map<String, dynamic> _profile = {};
@@ -89,18 +93,47 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     _rideService = widget.rideService ?? RideService();
     _deliveryService = widget.deliveryService ?? DeliveryService();
     _account = widget.accountService ?? DriverAccountService();
+    _modeManager = Provider.of<ModeManager?>(context, listen: false);
+    _modeManager?.beforeLeavingDriver = _leaveDriverMode;
     _openRidesStream = _rideService.watchOpenRides();
     _openDeliveriesStream = _deliveryService.watchOpenDeliveries();
-    _tabController = TabController(length: 2, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _refreshAccount();
     _restoreActiveJob();
   }
 
   @override
   void dispose() {
+    _modeManager?.beforeLeavingDriver = null;
     _positionSubscription?.cancel();
     _tabController.dispose();
     super.dispose();
+  }
+
+  Future<bool> _leaveDriverMode() async {
+    if (_activeJobId != null || _recoveringJob || _recoveryFailed) {
+      driverInfo(
+        context,
+        'Finish your trip first',
+        'Complete your active trip before switching to passenger mode.',
+      );
+      return false;
+    }
+    try {
+      await _rideService.setOnline(false);
+      await _positionSubscription?.cancel();
+      _positionSubscription = null;
+      return true;
+    } catch (_) {
+      if (mounted) {
+        driverInfo(
+          context,
+          'Could not go offline',
+          'Check your connection and try switching again.',
+        );
+      }
+      return false;
+    }
   }
 
   Future<void> _toggleOnline(bool value) async {
@@ -348,12 +381,7 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     return Scaffold(
       appBar: AppBar(
         title: Text(
-          [
-            'FastDriver',
-            'Earnings',
-            'Ride History',
-            'My Profile',
-          ][_navigationIndex],
+          ['FastDriver', 'Trips', 'Earnings', 'My Profile'][_navigationIndex],
         ),
         actions: [
           IconButton(
@@ -370,6 +398,8 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
       ),
       body: _navigationIndex == 0
           ? _buildDashboard(hasActiveJob)
+          : _navigationIndex == 1
+          ? _buildTrips()
           : FutureBuilder<List<Map<String, dynamic>>>(
               future: _jobs,
               builder: (context, snapshot) {
@@ -384,14 +414,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
                   return const Center(child: CircularProgressIndicator());
                 }
                 return switch (_navigationIndex) {
-                  1 => DriverEarnings(
+                  2 => DriverEarnings(
                     jobs: snapshot.data!,
                     onRefresh: () async {
                       _refreshAccount();
                       await _jobs;
                     },
                   ),
-                  2 => DriverHistory(
+                  1 => DriverHistory(
                     jobs: snapshot.data!,
                     onRefresh: () async {
                       _refreshAccount();
@@ -422,14 +452,14 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            selectedIcon: Icon(Icons.account_balance_wallet),
-            label: 'Earnings',
+            icon: Icon(Icons.directions_car_outlined),
+            selectedIcon: Icon(Icons.directions_car),
+            label: 'Trips',
           ),
           NavigationDestination(
-            icon: Icon(Icons.history_outlined),
-            selectedIcon: Icon(Icons.history),
-            label: 'History',
+            icon: Icon(Icons.bar_chart_outlined),
+            selectedIcon: Icon(Icons.bar_chart),
+            label: 'Earnings',
           ),
           NavigationDestination(
             icon: Icon(Icons.person_outline),
@@ -441,332 +471,354 @@ class _DriverHomeScreenState extends State<DriverHomeScreen>
     );
   }
 
-  Widget _buildDashboard(bool hasActiveJob) {
-    if (_recoveringJob) {
-      return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text('Checking for an unfinished trip...'),
-          ],
-        ),
-      );
-    }
-    if (_recoveryFailed) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text('Could not check your current trip.'),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _restoreActiveJob,
-              child: const Text('Retry'),
-            ),
-          ],
-        ),
-      );
-    }
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 3),
-          decoration: BoxDecoration(
-            color: _isOnline ? AppColors.success : AppColors.field,
-            borderRadius: BorderRadius.circular(28),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                _isOnline ? Icons.near_me : Icons.wifi_off,
-                color: _isOnline ? Colors.white : AppColors.textMuted,
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  _isOnline ? 'Online' : 'Offline',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    color: _isOnline ? Colors.white : AppColors.navy,
-                  ),
-                ),
-              ),
-              if (_updatingStatus)
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                )
-              else
-                Switch(
-                  value: _isOnline,
-                  onChanged: _toggleOnline,
-                  activeThumbColor: Colors.white,
-                  activeTrackColor: AppColors.success,
-                ),
-            ],
-          ),
-        ),
-        if (!hasActiveJob) ...[
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-            child: FutureBuilder<List<Map<String, dynamic>>>(
-              future: _jobs,
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return const Text('Earnings unavailable. Refresh to retry.');
-                }
-                if (!snapshot.hasData) return const LinearProgressIndicator();
-                final totals = DriverTotals(snapshot.data!);
-                return DriverCard(
-                  color: AppColors.blueTint,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Welcome back, ${_profile['full_name'] ?? 'Driver'}',
-                        style: const TextStyle(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.account_balance_wallet_outlined,
-                            color: AppColors.blueDeep,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  "Today's recorded fares",
-                                  style: TextStyle(
-                                    color: AppColors.blueDeep,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                Text(
-                                  money(totals.gross),
-                                  style: const TextStyle(
-                                    fontFamily: 'Manrope',
-                                    fontSize: 24,
-                                    fontWeight: FontWeight.w800,
-                                    color: AppColors.blueDeep,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Text(
-                            '${totals.count} trips',
-                            style: const TextStyle(color: AppColors.textMuted),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          TextButton(
-                            onPressed: () =>
-                                setState(() => _navigationIndex = 1),
-                            child: const Text('Earnings'),
-                          ),
-                          TextButton(
-                            onPressed: () =>
-                                setState(() => _navigationIndex = 2),
-                            child: const Text('History'),
-                          ),
-                          TextButton(
-                            onPressed: () => _page(const DriverWallet()),
-                            child: const Text('Wallet'),
-                          ),
-                          TextButton(
-                            onPressed: () =>
-                                setState(() => _navigationIndex = 3),
-                            child: const Text('Profile'),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
-          ),
-          if (_isOnline) SizedBox(height: 130, child: _buildMapHeader()),
-          if (_isOnline)
-            TabBar(
-              controller: _tabController,
-              tabs: const [
-                Tab(text: 'Ride requests'),
-                Tab(text: 'Deliveries'),
-              ],
-            ),
-        ],
-        const Divider(height: 1, color: AppColors.hairline),
-        Expanded(
-          child: hasActiveJob
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: DriverCard(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.navigation_rounded,
-                            size: 54,
-                            color: AppColors.blueDeep,
-                          ),
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Your trip is active',
-                            style: TextStyle(
-                              fontFamily: 'Manrope',
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          const Text(
-                            'Continue navigation, contact your customer or update trip status.',
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 20),
-                          FilledButton(
-                            onPressed: _resumeActive,
-                            child: const Text('Continue trip'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
-              : (_isOnline
-                    ? TabBarView(
-                        controller: _tabController,
-                        children: [
-                          _buildOpenRidesList(),
-                          _buildOpenDeliveriesList(),
-                        ],
-                      )
-                    : _buildOfflineMessage()),
-        ),
-      ],
-    );
-  }
-
   LatLng? get _driverPosition => _driverLat == null || _driverLng == null
       ? null
       : LatLng(_driverLat!, _driverLng!);
 
-  Widget _buildMapHeader() {
-    final position = _driverPosition;
-    return SizedBox(
-      height: 210,
-      child: position == null
-          ? Container(
-              color: const Color(0xFFE5F4FD),
-              alignment: Alignment.center,
-              child: const Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.map_outlined, size: 42, color: AppColors.blueDeep),
-                  SizedBox(height: 8),
-                  Text('Go online to show your live position'),
-                ],
-              ),
-            )
-          : GoogleMap(
-              initialCameraPosition: CameraPosition(target: position, zoom: 15),
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              zoomControlsEnabled: false,
-              markers: {
-                Marker(
-                  markerId: const MarkerId('driver'),
-                  position: position,
-                  infoWindow: const InfoWindow(title: 'Your live location'),
-                  icon: BitmapDescriptor.defaultMarkerWithHue(
-                    BitmapDescriptor.hueAzure,
+  Widget _buildTrips() => Column(
+    children: [
+      if (_activeJobId != null)
+        Padding(
+          padding: const EdgeInsets.all(16),
+          child: FilledButton.icon(
+            onPressed: _resumeActive,
+            icon: const Icon(Icons.navigation),
+            label: const Text('Continue active trip'),
+          ),
+        ),
+      TabBar(
+        controller: _tabController,
+        tabs: const [
+          Tab(text: 'Rides'),
+          Tab(text: 'Deliveries'),
+          Tab(text: 'History'),
+        ],
+      ),
+      Expanded(
+        child: TabBarView(
+          controller: _tabController,
+          children: [
+            _isOnline && _activeJobId == null
+                ? _buildOpenRidesList()
+                : const DriverEmpty(
+                    title: 'No requests while offline or on a trip',
+                    message: 'Finish your trip and go online from Home.',
                   ),
-                ),
+            _isOnline && _activeJobId == null
+                ? _buildOpenDeliveriesList()
+                : const DriverEmpty(
+                    title: 'Delivery requests paused',
+                    message:
+                        'Go online from Home to receive available deliveries.',
+                  ),
+            FutureBuilder<List<Map<String, dynamic>>>(
+              future: _jobs,
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return DriverEmpty(
+                    title: 'History unavailable',
+                    message: 'Check your connection and retry.',
+                    onRetry: _refreshAccount,
+                  );
+                }
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                return DriverHistory(
+                  jobs: snapshot.data!,
+                  onRefresh: () async {
+                    _refreshAccount();
+                    await _jobs;
+                  },
+                  onOpen: (job) => _page(DriverJobReceipt(job: job)),
+                );
               },
             ),
-    );
-  }
+          ],
+        ),
+      ),
+    ],
+  );
 
-  Widget _buildOfflineMessage() {
-    return FutureBuilder<List<Map<String, dynamic>>>(
-      future: _jobs,
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return DriverEmpty(
-            title: 'Activity unavailable',
-            message: 'Check your connection and try again.',
-            onRetry: _refreshAccount,
-          );
-        }
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        final rows = snapshot.data!;
-        return ListView(
-          padding: const EdgeInsets.all(20),
-          children: [
-            const Text(
-              'Recent Activity',
-              style: TextStyle(
-                fontFamily: 'Manrope',
-                fontSize: 19,
-                fontWeight: FontWeight.w800,
+  Widget _buildDashboard(bool hasActiveJob) {
+    if (_recoveringJob) return const Center(child: CircularProgressIndicator());
+    if (_recoveryFailed) {
+      return DriverEmpty(
+        title: 'Could not check your current trip',
+        message: 'Check your connection before going online.',
+        onRetry: _restoreActiveJob,
+      );
+    }
+    final hour = DateTime.now().hour;
+    final greeting = hour < 12
+        ? 'Good morning'
+        : hour < 18
+        ? 'Good afternoon'
+        : 'Good evening';
+    return RefreshIndicator(
+      onRefresh: () async {
+        _refreshAccount();
+        await _jobs;
+      },
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 27,
+                backgroundColor: AppColors.blueTint,
+                backgroundImage: _profile['photo_url'] is String
+                    ? NetworkImage(_profile['photo_url'])
+                    : null,
+                child: _profile['photo_url'] == null
+                    ? const Icon(
+                        Icons.person_rounded,
+                        color: AppColors.blueDeep,
+                      )
+                    : null,
               ),
-            ),
-            const SizedBox(height: 12),
-            if (rows.isEmpty)
-              const DriverEmpty(
-                title: 'Ready when you are',
-                message: 'Go online to receive ride and delivery requests. Your trips will appear here.',
-              ),
-            for (final job in rows.take(5))
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: DriverCard(
-                  child: ListTile(
-                    contentPadding: EdgeInsets.zero,
-                    leading: Icon(
-                      job['_delivery'] == true
-                          ? Icons.inventory_2_outlined
-                          : Icons.route,
-                      color: AppColors.blueDeep,
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$greeting,',
+                      style: const TextStyle(color: AppColors.textMuted),
                     ),
-                    title: Text(
-                      job['dropoff_address'] ?? 'Destination',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    subtitle: Text(
-                      '${(job['status'] ?? '').toString().replaceAll('_', ' ')}\n${jobDate(job)}',
-                    ),
-                    trailing: Text(
-                      money(job['fare_ugx']),
+                    Text(
+                      (_profile['full_name'] ?? 'Driver').toString(),
                       style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                        fontFamily: 'Asap',
+                        fontWeight: FontWeight.w800,
+                        fontSize: 22,
                       ),
                     ),
-                    onTap: () => _page(DriverJobReceipt(job: job)),
-                  ),
+                  ],
                 ),
               ),
-          ],
-        );
-      },
+            ],
+          ),
+          const SizedBox(height: 24),
+          DriverCard(
+            color: _isOnline ? const Color(0xFFE4FAEF) : Colors.white,
+            child: Row(
+              children: [
+                Icon(
+                  _isOnline ? Icons.circle : Icons.wifi_off,
+                  size: 18,
+                  color: _isOnline ? AppColors.success : AppColors.textMuted,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    _isOnline ? 'You’re online' : 'You’re offline',
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                if (_updatingStatus)
+                  const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else
+                  Switch(value: _isOnline, onChanged: _toggleOnline),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          FutureBuilder<List<Map<String, dynamic>>>(
+            future: _jobs,
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return DriverEmpty(
+                  title: 'Records unavailable',
+                  message: 'Check your connection and refresh.',
+                  onRetry: _refreshAccount,
+                );
+              }
+              if (!snapshot.hasData) return const LinearProgressIndicator();
+              final totals = DriverTotals(snapshot.data!);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  DriverCard(
+                    color: AppColors.blueDeep,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Today’s earnings',
+                          style: TextStyle(color: Colors.white70),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          money(totals.gross),
+                          style: const TextStyle(
+                            fontFamily: 'Asap',
+                            fontSize: 30,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Recorded fares · paid directly in cash',
+                          style: TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: DriverCard(
+                          child: Column(
+                            children: [
+                              Text(
+                                '${totals.count}',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const Text('Trips today'),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: DriverCard(
+                          child: Column(
+                            children: [
+                              Text(
+                                _profile['rating'] is num
+                                    ? (_profile['rating'] as num)
+                                          .toStringAsFixed(1)
+                                    : '—',
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              const Text('Rating'),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  if (hasActiveJob)
+                    DriverCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text(
+                            'Your trip is active',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: _resumeActive,
+                            icon: const Icon(Icons.navigation),
+                            label: const Text('Continue trip'),
+                          ),
+                        ],
+                      ),
+                    )
+                  else
+                    DriverCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            _isOnline
+                                ? 'Ready for your next trip'
+                                : 'Go online when you’re ready',
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'Ride and delivery requests appear in Trips.',
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton(
+                            onPressed: () =>
+                                setState(() => _navigationIndex = 1),
+                            child: const Text('Open trips & requests'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      const Expanded(
+                        child: Text(
+                          'Recent trips',
+                          style: TextStyle(
+                            fontFamily: 'Asap',
+                            fontSize: 19,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => setState(() => _navigationIndex = 1),
+                        child: const Text('See all'),
+                      ),
+                    ],
+                  ),
+                  if (snapshot.data!.isEmpty)
+                    const DriverEmpty(
+                      title: 'Ready when you are',
+                      message: 'Your completed rides and deliveries will appear here.',
+                    ),
+                  for (final job in snapshot.data!.take(4))
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: DriverCard(
+                        child: ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          leading: const Icon(
+                            Icons.route,
+                            color: AppColors.blueDeep,
+                          ),
+                          title: Text(
+                            '${job['pickup_address'] ?? 'Pickup'} → ${job['dropoff_address'] ?? 'Destination'}',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          subtitle: Text(jobDate(job)),
+                          trailing: Text(
+                            money(job['fare_ugx']),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          onTap: () => _page(DriverJobReceipt(job: job)),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+        ],
+      ),
     );
   }
 

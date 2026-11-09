@@ -16,7 +16,7 @@ class SplashScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFFBEEBFF), Color(0xFFF5FCFF), Color(0xFFB8E7FC)],
+          colors: [Color(0xFFE0F3F7), Color(0xFFF8FCFD), Color(0xFFC6EAF1)],
         ),
       ),
       child: SizedBox.expand(
@@ -37,6 +37,7 @@ class SplashScreen extends StatelessWidget {
                       ),
                       child: Image.asset(
                         'assets/icon/app_icon_foreground.png',
+                        color: onboardingBlue,
                         width: 132,
                         height: 132,
                         cacheWidth: 396,
@@ -61,7 +62,7 @@ class SplashScreen extends StatelessWidget {
                         child: LinearProgressIndicator(
                           minHeight: 4,
                           color: onboardingBlue,
-                          backgroundColor: Color(0xFFB9E4FA),
+                          backgroundColor: Color(0xFFC6EAF1),
                         ),
                       )
                     else ...[
